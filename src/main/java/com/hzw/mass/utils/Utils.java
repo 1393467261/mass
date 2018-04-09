@@ -1,5 +1,6 @@
 package com.hzw.mass.utils;
 
+import com.hzw.mass.entity.TextMessage;
 import com.thoughtworks.xstream.XStream;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;

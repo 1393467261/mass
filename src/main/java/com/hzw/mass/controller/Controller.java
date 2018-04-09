@@ -1,16 +1,16 @@
 package com.hzw.mass.controller;
 
-import com.hzw.mass.utils.TextMessage;
+import com.google.gson.Gson;
+import com.hzw.mass.entity.TextMessage;
+import com.hzw.mass.entity.UploadResp;
 import com.hzw.mass.utils.UploadUtil;
 import com.hzw.mass.utils.Utils;
-import com.hzw.mass.utils.WxUtils;
-import org.apache.http.HttpRequest;
+import com.hzw.mass.wx.App;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartRequest;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
@@ -27,16 +27,50 @@ import java.util.Map;
 @RestController
 public class Controller {
 
-    @RequestMapping("/upload")
+    //Ajax发送请求，返回已发送和总数百分比
+    @RequestMapping(value = "/percent", method = RequestMethod.GET)
+    public String getPercent(HttpServletResponse response){
+
+        float f = (((float)App.SUCCESS_COUNT + (float)App.FAIL_COUNT)/(float)App.USER_COUNT) * 100;
+        int i = (int)f;
+
+        return "[{\"percent\":" + i + "}]";
+    }
+
+    //Ajax发送请求，返回发送失败的次数
+    @RequestMapping(value = "/fail", method = RequestMethod.GET)
+    public Integer getFailCount(){
+
+        return App.FAIL_COUNT;
+    }
+
+    //Ajax发送请求，返回订阅者总数
+    @RequestMapping(value = "/total", method = RequestMethod.GET)
+    public Integer getUserCount(){
+
+        return App.USER_COUNT;
+    }
+
+    //Ajax发送请求，返回成功发送的次数
+    @RequestMapping(value = "/success", method = RequestMethod.GET)
+    public Integer getSuccessCount(){
+
+        return App.SUCCESS_COUNT;
+    }
+
+    @RequestMapping("/send")
     public String upload(@RequestParam(value = "my-file", required = false)MultipartFile file,
                          HttpServletRequest request) throws Exception {
 
-        String token = "8_Mqjso8hD_SBiyEYUZh_KId8N9LpCQjmLT3-z5ICYGYKsxqcirrAEiVNw9WNUUBhW21AKc-awteFU6OhB8AjllFAsSLyv6RmiyhYvpUhi8jPOcgywErInaFQtCevDaFg-4KIgIkKolGh6tZvnITHdADACNB";
-
-        String s = UploadUtil.postFile(token, file);
-        return s;
+        String token = "8_vgqVsV3sVeMRhS0M4Q3faN7_ROSXyzbusqVnV4AdjAwTUiriTt8JQBhZEjosUPvKMK-Jh6WvR0lAcHb0tBpPsIJ1b8fG4QG0eW6j54f1Icfho1qyrRsOWTca3vSRV-cKrG_Ds3XAIn9TT5tiAHWaADAVCR";
+        String uploadJsonResp = UploadUtil.postFile(token, file);
+        UploadResp uploadResp = new Gson().fromJson(uploadJsonResp, UploadResp.class);
+        String title = request.getParameter("title");
+        String text = request.getParameter("text");
+        return uploadResp.getUrl() + "\n" + title + "\n" + text;
     }
 
+    //消息发送程序的入口
     @RequestMapping("/index")
     public ModelAndView index(ModelAndView mv){
 
@@ -44,21 +78,7 @@ public class Controller {
         return mv;
     }
 
-    @RequestMapping("/send")
-    public ModelAndView sendMsg(ModelAndView mv, @RequestParam("text")String text){
-        /**
-        *@Description: text为用户输入的数据
-        */
-        System.out.println(text);
-        mv.setViewName("/index");
-        return mv;
-    }
-
-    @RequestMapping(value = "/post")
-    public String post(HttpServletRequest request){
-        return request.getParameter("id") + 111222;
-    }
-
+    //根据用户输入的消息进行回复
     @RequestMapping(value = "/wx")
     public void wx(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
@@ -91,7 +111,13 @@ public class Controller {
         }catch (Exception e){
             e.printStackTrace();
         }
-//
-//        return message;
+    }
+
+    @RequestMapping("/chart")
+    public ModelAndView chart(ModelAndView mv){
+
+        mv.setViewName("chart");
+
+        return mv;
     }
 }

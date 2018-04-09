@@ -53,7 +53,6 @@ public class WxUtils {
     public static String makePicAndTextMessage(String openId, String title, String description, String picUrl){
         title = title.replace("\"", "\\\"");
         description = description.replace("\"", "\\\"");
-        picUrl = picUrl.replace("\\", "");
         String jsonMsg = "{\n" +
                 "    \"touser\":\"%s\",\n" +
                 "    \"msgtype\":\"news\",\n" +
@@ -147,9 +146,14 @@ public class WxUtils {
                 String json = new String(body);
                 Pojo pojo = new Gson().fromJson(json, Pojo.class);
 
-                //等于1，则重试一次，成功则不处理，失败就记录errorCode和对应的openId，进入集合作为返回值
+                //等于1，则重试一次，成功则成功数加一，失败就记录errorCode和对应的openId，进入集合作为返回值，同时将失败数加一
                 if (pojo.getCounts() == 1){
                     ErrorMsg errorMsg = sendToUser(accessToken, makeTextCustomMessage(pojo.getOpenId(), content));
+
+                    //成功则成功数加一
+                    if (errorMsg.getErrcode() == 0){
+                        App.SUCCESS_COUNT += 1;
+                    }
 
                     //token失效，尝试次数不变，返回队列
                     if (errorMsg.getErrcode() == 40001){
@@ -165,13 +169,19 @@ public class WxUtils {
                     if (errorMsg.getErrcode() != 40001 && errorMsg.getErrcode() != 0){
                         Fail fail = new Fail(pojo.getOpenId(), errorMsg.getErrcode());
                         list.add(fail);
+                        App.FAIL_COUNT += 1;
                     }
                 }
 
-                //大于1，重试一次，若失败，次数减一，返回队列，若成功，不处理，消息被消费，发送成功
+                //大于1，重试一次，若失败，次数减一，返回队列，若成功，成功数加一，消息被消费，发送成功
                 if (pojo.getCounts() > 1){
                     ErrorMsg errorMsg = sendToUser(accessToken, makeTextCustomMessage(pojo.getOpenId(), content));
                     Integer errorCode = errorMsg.getErrcode();
+
+                    //成功则成功数加一
+                    if (errorMsg.getErrcode() == 0){
+                        App.SUCCESS_COUNT += 1;
+                    }
 
                     //token失效，尝试次数不变，返回队列
                     if (errorCode == 40001){

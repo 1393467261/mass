@@ -20,11 +20,19 @@ public class UploadResp {
     }
 
     public String getUrl() {
-        return url;
+        return url.replace("\\", "");
     }
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    @Override
+    public String toString() {
+        return "UploadResp{" +
+                "media_id='" + media_id + '\'' +
+                ", url='" + url + '\'' +
+                '}';
     }
 
     public UploadResp() {

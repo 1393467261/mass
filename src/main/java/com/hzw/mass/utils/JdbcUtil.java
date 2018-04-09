@@ -97,7 +97,7 @@ public class JdbcUtil {
             e.printStackTrace();
         }
     }
-    //返回最大的id
+    //返回当前summary表中最大的id
     public static Integer getMaxId(){
 
         int id = 0;
@@ -123,9 +123,8 @@ public class JdbcUtil {
         return id;
     }
     //将失败的集合写入数据库，返回写入的个数
-    public static Integer saveFailList(Integer id, List<Fail> list){
+    public static void saveFailList(Integer id, List<Fail> list){
 
-        int i = 0;
         Connection connection = null;
         PreparedStatement ps = null;
         ResultSet set = null;
@@ -139,15 +138,11 @@ public class JdbcUtil {
                 ps.setInt(3, fail.getErrorCode());
                 ps.setString(2, fail.getOpenId());
                 ps.execute();
-                i++;
             }
         }catch (Exception e){
             e.printStackTrace();
         }finally {
             close(connection, ps);
         }
-
-        return i;
     }
-
 }

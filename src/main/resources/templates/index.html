@@ -4,13 +4,142 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" th:href="@{/layui/css/layui.css}">
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/bootstrap-theme.min.css}">
     <title></title>
 </head>
-<body>
-<form action="/upload" method="post" name="my-form" enctype="multipart/form-data">
-    <input type="file" name="my-file">
-    <button type="submit" value="提交">提交</button>
-</form>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/bootstrap.min.js}"></script>
+<script th:src="@{/js/exporting.js}"></script>
+<script th:src="@{/js/highcharts.js}"></script>
+<script th:src="@{/js/highcharts-more.js}"></script>
+<body style="padding: 20px">
+
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div class="col-md-8">
+            <div class="tabbable" id="tabs-769458">
+                <ul class="nav nav-tabs">
+                    <li class="active">
+                        <a href="#panel-647368" data-toggle="tab">图文消息</a>
+                    </li>
+                    <li>
+                        <a href="#panel-484642" data-toggle="tab">其他消息</a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane active" id="panel-647368">
+
+                    </div>
+                    <div class="tab-pane" id="panel-484642">
+
+                    </div>
+                </div>
+            </div>
+            <!--表单-->
+            <form action="/send" method="post" name="my-form" enctype="multipart/form-data" role="form">
+                <div class="form-group">
+                    <hr>
+                    <label>主题</label>
+                    <input type="text" class="form-control" placeholder="主题输入" name="title">
+                    <hr>
+                    <label>正文</label>
+                    <textarea class="form-control" rows="3" placeholder="正文输入" name="text"></textarea>
+                    <hr>
+                    <label>插入图片,大小不超过2M,支持bmp/png/jpeg/jpg/gif格式</label>
+                    <br>
+                    <input type="file" name="my-file">
+                </div>
+                <hr>
+                <button type="submit" class="btn btn-primary">发送消息</button>
+            </form>
+            <!--进度条-->
+            <hr>
+            <div class="progress">
+                <div id="my-progress" class="progress-bar progress-bar-success" role="progressbar" style="width: 90%;">
+                </div>
+            </div>
+            <!--饼图-->
+            <div class="col-md-8">
+                <div id="container" style="margin: 0 auto"></div>
+            </div>
+            <div class="col-md-4">另一个模块</div>
+        </div>
+        <!--历史消息-->
+        <div class="col-md-4">
+            <img alt="140x140" src="https://hzw139.oss-cn-shenzhen.aliyuncs.com/linux_report/report2/4.png" />
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    <!--使用ajax间隔一定秒数向服务器请求当前发送成功次数和用户总数,返回给前端显示进度条-->
+    setInterval(function () {
+        var percents;
+        $.ajax({
+            url:"/percent",
+            type:"get",
+            dataType: "json",
+            success:function (data) {
+                percents = data[0].percent;
+                document.getElementById("my-progress").style.width = Math.random() * 100 + '%';
+            }
+        });
+    }, 200)
+</script>
+<script type="text/javascript">
+
+    Highcharts.chart('container', {
+        chart: {
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false,
+            type: 'pie'
+        },
+        title: {
+            text: 'Browser market shares January, 2015 to May, 2015'
+        },
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: true,
+                    format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                    }
+                }
+            }
+        },
+        series: [{
+            name: 'Brands',
+            colorByPoint: true,
+            data: [{
+                name: 'IE',
+                y: 56.33
+            }, {
+                name: 'Chrome',
+                y: 24.03,
+                sliced: true,
+                selected: true
+            }, {
+                name: 'Firefox',
+                y: 10.38
+            }, {
+                name: 'Safari',
+                y: 4.77
+            }, {
+                name: 'Opera',
+                y: 0.91
+            }, {
+                name: 'Other',
+                y: 0.2
+            }]
+        }]
+    });
+</script>
 </body>
 </html>

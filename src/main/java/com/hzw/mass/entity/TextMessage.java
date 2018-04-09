@@ -1,4 +1,4 @@
-package com.hzw.mass.utils;
+package com.hzw.mass.entity;
 
 /**
  * @Author: Hzw
