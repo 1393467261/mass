@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.w3.org/1999/xhtml" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" th:href="@{/layui/css/layui.css}">
+    <title></title>
+</head>
+<body>
+<form action="/upload" method="post" name="my-form" enctype="multipart/form-data">
+    <input type="file" name="my-file">
+    <button type="submit" value="提交">提交</button>
+</form>
+</body>
+</html>
