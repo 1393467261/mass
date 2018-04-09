@@ -70,7 +70,9 @@ public class UploadUtil {
         System.out.println(result);
         return result;
     }
-
+    /**
+    *@Description: 增强功能，对接input file传入的数据流，上传到微信服务器，获取id和url
+    */
     public static String postFile(String accessToken, MultipartFile file) {
 
         String url = "https://api.weixin.qq.com/cgi-bin/material/add_material?access_token=" + accessToken + "&type=image";
@@ -123,7 +125,6 @@ public class UploadUtil {
         } catch (IOException e) {
             throw new RuntimeException("postFile数据传输失败", e);
         }
-        System.out.println(result);
         return result;
     }
 }
