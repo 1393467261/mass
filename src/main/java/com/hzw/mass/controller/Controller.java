@@ -1,7 +1,9 @@
 package com.hzw.mass.controller;
 
 import com.hzw.mass.utils.TextMessage;
+import com.hzw.mass.utils.UploadUtil;
 import com.hzw.mass.utils.Utils;
+import com.hzw.mass.utils.WxUtils;
 import org.apache.http.HttpRequest;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -13,9 +15,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.util.Date;
 import java.util.Map;
 
@@ -31,8 +31,10 @@ public class Controller {
     public String upload(@RequestParam(value = "my-file", required = false)MultipartFile file,
                          HttpServletRequest request) throws Exception {
 
-        String path = file.getOriginalFilename().toString();
-        return path;
+        String token = "8_Mqjso8hD_SBiyEYUZh_KId8N9LpCQjmLT3-z5ICYGYKsxqcirrAEiVNw9WNUUBhW21AKc-awteFU6OhB8AjllFAsSLyv6RmiyhYvpUhi8jPOcgywErInaFQtCevDaFg-4KIgIkKolGh6tZvnITHdADACNB";
+
+        String s = UploadUtil.postFile(token, file);
+        return s;
     }
 
     @RequestMapping("/index")
