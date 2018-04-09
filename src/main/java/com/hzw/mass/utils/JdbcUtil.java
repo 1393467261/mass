@@ -1,8 +1,10 @@
 package com.hzw.mass.utils;
 
 import com.hzw.mass.entity.Fail;
+import com.hzw.mass.entity.Summary;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -144,5 +146,34 @@ public class JdbcUtil {
         }finally {
             close(connection, ps);
         }
+    }
+    //查询数据库中的每条消息的记录，返回消息对象集合
+    public static List<Summary> getSummaryList(){
+
+        Connection connection = null;
+        PreparedStatement ps = null;
+        ResultSet set = null;
+        String sql = "Select * from summary ORDER BY id DESC";
+        List<Summary> list = new ArrayList<>();
+
+        try{
+            connection = getConnection();
+            ps = connection.prepareStatement(sql);
+            set = ps.executeQuery();
+            while (set.next()){
+                Summary summary = new Summary();
+                summary.setId(set.getInt("id"));
+                summary.setText(set.getString("text"));
+                summary.setTitle(set.getString("title"));
+                summary.setTime(set.getString("time"));
+                list.add(summary);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            close(set, ps, connection);
+        }
+
+        return list;
     }
 }

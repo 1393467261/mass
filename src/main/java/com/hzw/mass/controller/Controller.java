@@ -1,10 +1,13 @@
 package com.hzw.mass.controller;
 
 import com.google.gson.Gson;
+import com.hzw.mass.entity.Summary;
 import com.hzw.mass.entity.TextMessage;
 import com.hzw.mass.entity.UploadResp;
+import com.hzw.mass.utils.JdbcUtil;
 import com.hzw.mass.utils.UploadUtil;
 import com.hzw.mass.utils.Utils;
+import com.hzw.mass.utils.WxUtils;
 import com.hzw.mass.wx.App;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -17,6 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -62,7 +66,7 @@ public class Controller {
     public String upload(@RequestParam(value = "my-file", required = false)MultipartFile file,
                          HttpServletRequest request) throws Exception {
 
-        String token = "8_vgqVsV3sVeMRhS0M4Q3faN7_ROSXyzbusqVnV4AdjAwTUiriTt8JQBhZEjosUPvKMK-Jh6WvR0lAcHb0tBpPsIJ1b8fG4QG0eW6j54f1Icfho1qyrRsOWTca3vSRV-cKrG_Ds3XAIn9TT5tiAHWaADAVCR";
+        String token = WxUtils.getAccessToken();
         String uploadJsonResp = UploadUtil.postFile(token, file);
         UploadResp uploadResp = new Gson().fromJson(uploadJsonResp, UploadResp.class);
         String title = request.getParameter("title");
@@ -74,6 +78,8 @@ public class Controller {
     @RequestMapping("/index")
     public ModelAndView index(ModelAndView mv){
 
+        List<Summary> summaryList = JdbcUtil.getSummaryList();
+        mv.addObject("list", summaryList);
         mv.setViewName("/index");
         return mv;
     }

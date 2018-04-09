@@ -60,15 +60,23 @@
                 </div>
             </div>
             <!--饼图-->
-            <div class="col-md-8">
+            <div class="col-md-12">
                 <div id="container" style="margin: 0 auto"></div>
             </div>
-            <div class="col-md-4">另一个模块</div>
         </div>
         <!--历史消息-->
         <div class="col-md-4">
-            <img alt="140x140" src="https://hzw139.oss-cn-shenzhen.aliyuncs.com/linux_report/report2/4.png" />
+            <h4>历史消息</h4>
+            <hr>
+            <ul th:each="userinfo:${list}" class="hero-unit">
+                <li th:text="${userinfo.time}"></li>
+                <h4 th:text="${userinfo.title}"></h4>
+                <h5 th:text="${userinfo.text}"></h5>
+                <a class="btn btn-primary" href="/chart">查看详情</a>
+                <hr>
+            </ul>
         </div>
+
     </div>
 </div>
 <script type="text/javascript">
