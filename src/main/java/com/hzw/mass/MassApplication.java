@@ -3,7 +3,7 @@ package com.hzw.mass;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 /**
-*@Description: 程序入口
+*@Description: 
 */
 @SpringBootApplication
 public class MassApplication {
