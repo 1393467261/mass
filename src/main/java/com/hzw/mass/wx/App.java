@@ -1,6 +1,7 @@
 package com.hzw.mass.wx;
 
 import com.google.gson.Gson;
+import com.hzw.mass.entity.ErrorMsg;
 import com.hzw.mass.entity.Fail;
 import com.hzw.mass.entity.Pojo;
 import com.hzw.mass.entity.UserList;
@@ -9,14 +10,16 @@ import com.hzw.mass.utils.WxUtils;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class App {
 
     public static String ACCESS_TOKEN;
-    public static Integer SUCCESS_COUNT = 1;
-    public static Integer FAIL_COUNT = 6;
+    public static Integer SUCCESS_COUNT = 22;
+    public static Integer FAIL_COUNT = 8  ;
     public static Integer USER_COUNT = 30;
+    public static Integer MAX_ID = JdbcUtil.getMaxId();
 
     public static void main(String[] args) throws Exception {
 
@@ -26,6 +29,7 @@ public class App {
         String accessToken = WxUtils.getAccessToken();
         String content = "this is message1";
         //获取所有的openid
+        //TODO 上传图片，返回url，id写入数据库，修改App.MAX_ID
         UserList openIds = WxUtils.getOpenIds(accessToken);
         List<String> openIdList = openIds.getData().getOpenid();
         App.USER_COUNT = openIdList.size();
@@ -38,7 +42,8 @@ public class App {
         List<Fail> fails = WxUtils.queueHandler(accessToken, content);
         //将队列中发送失败的写入数据库
         Integer id = JdbcUtil.getMaxId();
-        JdbcUtil.saveFailList(id, fails);
+        //后续处理
+        WxUtils.afterSend(id, fails);
 
         channel.close();
         connection.close();

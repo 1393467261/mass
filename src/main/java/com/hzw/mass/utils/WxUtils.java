@@ -12,6 +12,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -117,7 +118,6 @@ public class WxUtils {
             httpPost.setEntity(new StringEntity(message, "utf-8"));
             HttpResponse response = client.execute(httpPost);
             result = EntityUtils.toString(response.getEntity(),"utf-8");
-            System.out.println(result);
             errorMsg = new Gson().fromJson(result, ErrorMsg.class);
             System.out.println(errorMsg);
         } catch (Exception e) {
@@ -152,6 +152,8 @@ public class WxUtils {
 
                     //成功则成功数加一
                     if (errorMsg.getErrcode() == 0){
+                        Fail fail = new Fail(pojo.getOpenId(), errorMsg.getErrcode());
+                        list.add(fail);
                         App.SUCCESS_COUNT += 1;
                     }
 
@@ -180,6 +182,8 @@ public class WxUtils {
 
                     //成功则成功数加一
                     if (errorMsg.getErrcode() == 0){
+                        Fail fail = new Fail(pojo.getOpenId(), errorMsg.getErrcode());
+                        list.add(fail);
                         App.SUCCESS_COUNT += 1;
                     }
 
@@ -207,5 +211,30 @@ public class WxUtils {
         });
 
         return list;
+    }
+    //所有消息发送完成后的处理
+    public static void afterSend(Integer summaryId, List<Fail> list){
+
+        java.sql.Connection connection = null;
+        //将发送成功和失败的写入数据库
+        try {
+            connection = JdbcUtil.getConnection();
+            JdbcUtil.success(connection, App.SUCCESS_COUNT, summaryId);
+            JdbcUtil.fail(connection, App.FAIL_COUNT, summaryId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }finally {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        //所有数据置为0
+        App.USER_COUNT = 0;
+        App.FAIL_COUNT = 0;
+        App.SUCCESS_COUNT = 0;
+        //将失败的写入数据库
+        JdbcUtil.saveFailList(summaryId, list);
     }
 }

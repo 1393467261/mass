@@ -72,7 +72,7 @@
                 <li th:text="${userinfo.time}"></li>
                 <h4 th:text="${userinfo.title}"></h4>
                 <h5 th:text="${userinfo.text}"></h5>
-                <a class="btn btn-primary" href="/chart">查看详情</a>
+                <a class="btn btn-primary" th:href="@{/chart(id=${userinfo.id})}">查看详情</a>
                 <hr>
             </ul>
         </div>
@@ -86,17 +86,24 @@
         $.ajax({
             url:"/percent",
             type:"get",
-            dataType: "json",
             success:function (data) {
-                percents = data[0].percent;
-                document.getElementById("my-progress").style.width = Math.random() * 100 + '%';
+                percents = data;
+                document.getElementById("my-progress").style.width = percents + '%';
             }
         });
     }, 200)
 </script>
 <script type="text/javascript">
+    $.ajax({
+        url:"/collection",
+        type:"get",
+        dataType: "json",
+        success:function (data) {
+            chart.series[0].setData(data)
+        }
+    });
 
-    Highcharts.chart('container', {
+    var chart = new Highcharts.chart('container', {
         chart: {
             plotBackgroundColor: null,
             plotBorderWidth: null,
@@ -104,7 +111,7 @@
             type: 'pie'
         },
         title: {
-            text: 'Browser market shares January, 2015 to May, 2015'
+            text: '发送状态'
         },
         tooltip: {
             pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
@@ -125,27 +132,6 @@
         series: [{
             name: 'Brands',
             colorByPoint: true,
-            data: [{
-                name: 'IE',
-                y: 56.33
-            }, {
-                name: 'Chrome',
-                y: 24.03,
-                sliced: true,
-                selected: true
-            }, {
-                name: 'Firefox',
-                y: 10.38
-            }, {
-                name: 'Safari',
-                y: 4.77
-            }, {
-                name: 'Opera',
-                y: 0.91
-            }, {
-                name: 'Other',
-                y: 0.2
-            }]
         }]
     });
 </script>

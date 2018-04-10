@@ -1,5 +1,6 @@
 package com.hzw.mass.utils;
 
+import com.hzw.mass.entity.ErrorTypeCollect;
 import com.hzw.mass.entity.Fail;
 import com.hzw.mass.entity.Summary;
 
@@ -167,6 +168,31 @@ public class JdbcUtil {
                 summary.setTitle(set.getString("title"));
                 summary.setTime(set.getString("time"));
                 list.add(summary);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            close(set, ps, connection);
+        }
+
+        return list;
+    }
+    //返回统计错误种类及相应的数量
+    public static List<ErrorTypeCollect> getErrorTypeCollect(Integer summaryId){
+
+        Connection connection = null;
+        PreparedStatement ps = null;
+        ResultSet set = null;
+        String sql = "SELECT errorCode,COUNT(errorCode) as count FROM fail where summaryId = ?   GROUP BY errorCode ";
+        List<ErrorTypeCollect> list = new ArrayList<>();
+
+        try{
+            connection = getConnection();
+            ps = connection.prepareStatement(sql);
+            ps.setInt(1, summaryId);
+            set = ps.executeQuery();
+            while (set.next()){
+                list.add(new ErrorTypeCollect(set.getInt("errorCode"), set.getInt("count")));
             }
         }catch (Exception e){
             e.printStackTrace();
