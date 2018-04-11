@@ -35,6 +35,20 @@ public class Test {
     @org.junit.Test
     public void test(){
 
-        System.out.println(JdbcUtil.getMaxId());
+        String token = WxUtils.getAccessToken();
+        String openId = "oRUz80_FTbCClMbeHJLD6oHUeAqE";
+        String uploadRespJson = UploadUtil.postFile(token, "C:\\Users\\13934\\Desktop\\liulei\\2.png");
+        UploadResp uploadResp = new Gson().fromJson(uploadRespJson, UploadResp.class);
+        System.out.println(uploadResp);
+        String message = WxUtils.makePicAndTextMessage(openId, "美好的一天", "亲爱的，今天太阳好温暖啊", uploadResp.getUrl());
+        ErrorMsg errorMsg = WxUtils.sendToUser(token, message);
+        System.out.println(errorMsg);
+    }
+
+    @org.junit.Test
+    public void test2(){
+
+        Summary summary = JdbcUtil.getSummary(10);
+        System.out.println(summary);
     }
 }

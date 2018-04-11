@@ -202,4 +202,31 @@ public class JdbcUtil {
 
         return list;
     }
+    //返回消息的图片和内容
+    public static Summary getSummary(Integer id){
+
+        Connection connection = null;
+        PreparedStatement ps = null;
+        ResultSet set = null;
+        Summary summary = new Summary();
+        String sql = "Select * from summary where id = ?";
+
+        try{
+            connection = getConnection();
+            ps = connection.prepareStatement(sql);
+            ps.setInt(1, id);
+            set = ps.executeQuery();
+            set.next();
+            summary.setTitle(set.getString("title"));
+            summary.setText(set.getString("text"));
+            summary.setMediaId(set.getString("mediaId"));
+            summary.setUrl(set.getString("url"));
+        }catch(Exception e){
+            e.printStackTrace();
+        }finally {
+            close(set, ps, connection);
+        }
+
+        return summary;
+    }
 }

@@ -2,6 +2,7 @@
 <html lang="zh-CN" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="utf-8">
+    <meta name="referrer" content="never" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
@@ -14,8 +15,17 @@
 <script th:src="@{/js/highcharts-more.js}"></script>
 <script th:src="@{/js/solid-gauge.js}"></script>
 <script th:src="@{/js/bootstrap.min.js}"></script>
-<body>
-<div class="col-md-6"></div>
+<script th:src="@{https://img.hcharts.cn/highcharts-plugins/highcharts-zh_CN.js}"></script>
+<body style="padding: 20px">
+<!--破解防止盗取链接的脚本-->
+
+<div class="col-md-6">
+    <script type="text/javascript">
+        showImg('[[${summary.url}]]');
+    </script>
+    <h4 th:text="${summary.title}"></h4>
+    <h5 th:text="${summary.text}"></h5>
+</div>
 <div id="container" class="col-md-6"></div>
 </body>
 <script th:inline="javascript">

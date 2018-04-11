@@ -145,6 +145,8 @@ public class Controller {
         mv.setViewName("chart");
         List<ErrorTypeCollect> errorTypeCollect = JdbcUtil.getErrorTypeCollect(id);
         mv.addObject("jsonString", new Gson().toJson(errorTypeCollect));
+        Summary summary = JdbcUtil.getSummary(id);
+        mv.addObject("summary", summary);
 
         return mv;
     }
