@@ -28,7 +28,7 @@ class MyThread extends Thread{
     }
 
     @Override
-    public void run(){
+    public void run (){
         System.out.println("name:" + name + " child thread ID:" + Thread.currentThread() .getId());
     }
 }

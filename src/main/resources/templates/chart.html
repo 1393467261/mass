@@ -18,12 +18,22 @@
 <script th:src="@{https://img.hcharts.cn/highcharts-plugins/highcharts-zh_CN.js}"></script>
 <body style="padding: 20px">
 <!--破解防止盗取链接的脚本-->
-
+<script type="text/javascript">
+    function showImg(url) {
+        var frameid = 'frameimg' + Math.random();
+        console.debug(frameid);
+        console.debug(url);
+        window.img = '<img id="img" style="width:100%" src=\'' + url + '?' + Math.random() + '\' /><script>window.onload = function() { parent.document.getElementById(\'' + frameid + '\').height = document.getElementById(\'img\').height+\'px\'; }<' + '/script>';
+        document.write('<iframe id="' + frameid + '" src="javascript:parent.img;" frameBorder="0" scrolling="no" width="60%"></iframe>');
+    }
+</script>
 <div class="col-md-6">
     <script type="text/javascript">
         showImg('[[${summary.url}]]');
     </script>
+    <hr>
     <h4 th:text="${summary.title}"></h4>
+    <hr>
     <h5 th:text="${summary.text}"></h5>
 </div>
 <div id="container" class="col-md-6"></div>

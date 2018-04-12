@@ -1,16 +1,17 @@
 package com.hzw.mass;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.hzw.mass.entity.*;
 import com.hzw.mass.utils.JdbcUtil;
 import com.hzw.mass.utils.UploadUtil;
 import com.hzw.mass.utils.WxUtils;
 import com.hzw.mass.wx.App;
 
+import javax.swing.plaf.metal.OceanTheme;
 import java.io.File;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * @Author: Hzw
@@ -48,7 +49,19 @@ public class Test {
     @org.junit.Test
     public void test2(){
 
-        Summary summary = JdbcUtil.getSummary(10);
-        System.out.println(summary);
+        App.ACCESS_TOKEN = WxUtils.getAccessToken();
+        UserList openIds = WxUtils.getOpenIds(App.ACCESS_TOKEN);
+        List<String> openidList = openIds.getData().getOpenid();
+        List<Customer> customerInfoList = WxUtils.getCustomerInfoList(openidList);
+        JdbcUtil.saveCustomerInfo2Db(customerInfoList);
     }
+
+    @org.junit.Test
+    public void test3(){
+        String str = "{\"touser\":\"%s\",\"msgtype\":\"text\",\"text\":{\"content\":\"dasdsadsad\"}}";
+        HashMap map = new Gson().fromJson(str, HashMap.class);
+        Object o =  map.get("text");
+        System.out.println(o);
+    }
+
 }

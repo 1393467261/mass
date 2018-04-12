@@ -10,7 +10,8 @@ public class RbmqReceiver {
 
     public static void main(String[] args) throws IOException, TimeoutException {
         ConnectionFactory factory = WxUtils.getrabbitmqFactory();
-        Channel channel = factory.newConnection().createChannel();
+        Connection connection = factory.newConnection();
+        Channel channel = connection.createChannel();
 
         channel.basicConsume("queue_name", true, new DefaultConsumer(channel){
             @Override

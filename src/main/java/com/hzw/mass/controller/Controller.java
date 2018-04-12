@@ -7,6 +7,8 @@ import com.hzw.mass.utils.UploadUtil;
 import com.hzw.mass.utils.Utils;
 import com.hzw.mass.utils.WxUtils;
 import com.hzw.mass.wx.App;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -19,10 +21,7 @@ import org.springframework.web.servlet.View;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @Author: Hzw
@@ -39,16 +38,6 @@ public class Controller {
         List<ErrorTypeCollect> errorTypeCollect = JdbcUtil.getErrorTypeCollect(JdbcUtil.getMaxId());
 
         return new Gson().toJson(errorTypeCollect);
-    }
-
-    //Ajax发送请求，返回已发送和总数百分比
-    @RequestMapping(value = "/percent", method = RequestMethod.GET)
-    public Integer getPercent(HttpServletResponse response){
-
-        float f = (((float)App.SUCCESS_COUNT + (float)App.FAIL_COUNT)/(float)App.USER_COUNT) * 100;
-        int i = (int)f;
-
-        return i;
     }
 
     //Ajax发送请求，返回发送失败的次数
@@ -72,24 +61,49 @@ public class Controller {
         return App.SUCCESS_COUNT;
     }
 
-    @RequestMapping("/send")
+    @RequestMapping("/send_old")
     public ModelAndView upload(@RequestParam(value = "my-file", required = false)MultipartFile file,
                          HttpServletRequest request) throws Exception {
 
+        Connection connection = WxUtils.getrabbitmqFactory().newConnection();
+        Channel channel = connection.createChannel();
         ModelAndView mv = new ModelAndView();
         String token = WxUtils.getAccessToken();
         String uploadJsonResp = UploadUtil.postFile(token, file);
         UploadResp uploadResp = new Gson().fromJson(uploadJsonResp, UploadResp.class);
-        JdbcUtil.saveUrlAndMediaId(uploadResp.getUrl(), uploadResp.getMedia_id());
-        String title = request.getParameter("title");
-        String text = request.getParameter("text");
+
+        String title = "";
+        String text = "";
+        try{
+            title = new String(request.getParameter("title").getBytes(), "utf-8");
+            text = new String(request.getParameter("text").getBytes(), "utf-8");
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
+        JdbcUtil.saveUrlAndMediaId(uploadResp.getUrl(), uploadResp.getMedia_id(), title, text);
+        String url = uploadResp.getUrl();
+        //发送的openId集合
+        List<String> openIdList = new ArrayList<>(Arrays.asList("oRUz80_FTbCClMbeHJLD6oHUeAqE",
+                "oRUz80_FTbCClMbeHJLD6oHUeAqE",
+                "oRUz80_FTbCClMbeHJLD6oHUeAqE"));
+        App.USER_COUNT = openIdList.size();
+        //封装openid，加上count的属性,传入消息队列
+        for (String s : openIdList) {
+            String json = new Gson().toJson(new Pojo(s));
+            WxUtils.sendToQueue(json);
+        }
+
+        //转发至index
         mv.setView(new View() {
             @Override
             public void render(@Nullable Map<String, ?> map, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws Exception {
                 httpServletResponse.sendRedirect("/index");
             }
         });
-        System.out.println(uploadResp + title + "\n" + text);
+
+        channel.close();
+        connection.close();
 
         return mv;
     }

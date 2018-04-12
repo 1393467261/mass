@@ -12,6 +12,8 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +23,7 @@ public class WxUtils {
 
     //获取rabbitmq连接
     public static ConnectionFactory getrabbitmqFactory(){
+
         ConnectionFactory factory = new ConnectionFactory();
 
         factory.setHost("192.168.31.2");
@@ -128,13 +131,20 @@ public class WxUtils {
     }
 
     //发送消息到队列中
-    public static void sendToQueue(String json, Channel channel) throws Exception{
-
-        channel.basicPublish("", "queue_name", null, json.getBytes());
+    public static void sendToQueue(String string){
+        Channel channel = null;
+        try {
+            channel = getrabbitmqFactory().newConnection().createChannel();
+            channel.basicPublish("", "queue_name", null, string.getBytes());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        }
     }
 
     //根据调用微信服务器接口返回值判断，若失败，判断count是否小于1，若小于1，则丢弃该消息，否则count-1，返回给队列，返回的是发送失败的fail集合
-    public static List<Fail> queueHandler(String accessToken, String content) throws IOException, TimeoutException {
+    public static List<Fail> queueHandler(String title, String text, String url) throws IOException, TimeoutException {
         Connection connection = WxUtils.getrabbitmqFactory().newConnection();
         Channel channel = connection.createChannel();
         List<Fail> list = new ArrayList<>();
@@ -144,69 +154,84 @@ public class WxUtils {
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
 
                 String json = new String(body);
-                Pojo pojo = new Gson().fromJson(json, Pojo.class);
-
-                //等于1，则重试一次，成功则成功数加一，失败就记录errorCode和对应的openId，进入集合作为返回值，同时将失败数加一
-                if (pojo.getCounts() == 1){
-                    ErrorMsg errorMsg = sendToUser(accessToken, makeTextCustomMessage(pojo.getOpenId(), content));
-
-                    //成功则成功数加一
-                    if (errorMsg.getErrcode() == 0){
-                        Fail fail = new Fail(pojo.getOpenId(), errorMsg.getErrcode());
-                        list.add(fail);
-                        App.SUCCESS_COUNT += 1;
-                    }
-
-                    //token失效，尝试次数不变，返回队列
-                    if (errorMsg.getErrcode() == 40001){
-                        App.ACCESS_TOKEN = WxUtils.getAccessToken();
-                        try {
-                            sendToQueue(new Gson().toJson(pojo), channel);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-                    //不是token失效导致的
-                    if (errorMsg.getErrcode() != 40001 && errorMsg.getErrcode() != 0){
-                        Fail fail = new Fail(pojo.getOpenId(), errorMsg.getErrcode());
-                        list.add(fail);
-                        App.FAIL_COUNT += 1;
-                    }
+                Object obj = new Gson().fromJson(json, Object.class);
+                try {
+                    Method m = obj.getClass().getMethod("getMsgtype", null);
+                    Object o = m.invoke(obj);
+                    String msgtype = o.toString();
+                    System.out.println(msgtype);
+                } catch (NoSuchMethodException e) {
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                } catch (InvocationTargetException e) {
+                    e.printStackTrace();
                 }
 
-                //大于1，重试一次，若失败，次数减一，返回队列，若成功，成功数加一，消息被消费，发送成功
-                if (pojo.getCounts() > 1){
-                    ErrorMsg errorMsg = sendToUser(accessToken, makeTextCustomMessage(pojo.getOpenId(), content));
-                    Integer errorCode = errorMsg.getErrcode();
-
-                    //成功则成功数加一
-                    if (errorMsg.getErrcode() == 0){
-                        Fail fail = new Fail(pojo.getOpenId(), errorMsg.getErrcode());
-                        list.add(fail);
-                        App.SUCCESS_COUNT += 1;
-                    }
-
-                    //token失效，尝试次数不变，返回队列
-                    if (errorCode == 40001){
-                        App.ACCESS_TOKEN = WxUtils.getAccessToken();
-                        try {
-                            sendToQueue(new Gson().toJson(pojo), channel);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-                    //不是token失效导致的
-                    if (errorCode != 40001 && errorCode != 0){
-                        try{
-                        pojo.decr();
-                        sendToQueue(new Gson().toJson(pojo), channel);
-                        }catch (Exception e){
-                            throw new RuntimeException("error in queueHandler");
-                        }
-                    }
-                }
+//                //封装消息
+//                String content = WxUtils.makePicAndTextMessage(pojo.getOpenId(), title, text, url);
+//
+//                //等于1，则重试一次，成功则成功数加一，失败就记录errorCode和对应的openId，进入集合作为返回值，同时将失败数加一
+//                if (pojo.getCounts() == 1){
+//                    ErrorMsg errorMsg = sendToUser(App.ACCESS_TOKEN, content);
+//
+//                    //成功则成功数加一
+//                    if (errorMsg.getErrcode() == 0){
+//                        Fail fail = new Fail(pojo.getOpenId(), errorMsg.getErrcode());
+//                        list.add(fail);
+//                        App.SUCCESS_COUNT += 1;
+//                    }
+//
+//                    //token失效，尝试次数不变，返回队列
+//                    if (errorMsg.getErrcode() == 40001){
+//                        App.ACCESS_TOKEN = WxUtils.getAccessToken();
+//                        try {
+//                            sendToQueue(new Gson().toJson(pojo));
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//
+//                    //不是token失效导致的
+//                    if (errorMsg.getErrcode() != 40001 && errorMsg.getErrcode() != 0){
+//                        Fail fail = new Fail(pojo.getOpenId(), errorMsg.getErrcode());
+//                        list.add(fail);
+//                        App.FAIL_COUNT += 1;
+//                    }
+//                }
+//
+//                //大于1，重试一次，若失败，次数减一，返回队列，若成功，成功数加一，消息被消费，发送成功
+//                if (pojo.getCounts() > 1){
+//                    ErrorMsg errorMsg = sendToUser(App.ACCESS_TOKEN, content);
+//                    Integer errorCode = errorMsg.getErrcode();
+//
+//                    //成功则成功数加一
+//                    if (errorMsg.getErrcode() == 0){
+//                        Fail fail = new Fail(pojo.getOpenId(), errorMsg.getErrcode());
+//                        list.add(fail);
+//                        App.SUCCESS_COUNT += 1;
+//                    }
+//
+//                    //token失效，尝试次数不变，返回队列
+//                    if (errorCode == 40001){
+//                        App.ACCESS_TOKEN = WxUtils.getAccessToken();
+//                        try {
+//                            sendToQueue(new Gson().toJson(pojo));
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//
+//                    //不是token失效导致的
+//                    if (errorCode != 40001 && errorCode != 0){
+//                        try{
+//                        pojo.decr();
+//                        sendToQueue(new Gson().toJson(pojo));
+//                        }catch (Exception e){
+//                            throw new RuntimeException("error in queueHandler");
+//                        }
+//                    }
+//                }
             }
         });
 
@@ -236,5 +261,39 @@ public class WxUtils {
         App.SUCCESS_COUNT = 0;
         //将失败的写入数据库
         JdbcUtil.saveFailList(summaryId, list);
+    }
+
+    //通过openId获取客户信息
+    public static Customer getCustomerInfo(String openId){
+
+        String url = "https://api.weixin.qq.com/cgi-bin/user/info?access_token=" + App.ACCESS_TOKEN + "&openid=" + openId + "&lang=zh_CN";
+        CloseableHttpClient client = HttpClients.createDefault();
+        HttpPost httpPost = new HttpPost(url);
+        String result="";
+
+        try {
+            HttpResponse response = client.execute(httpPost);
+            result = EntityUtils.toString(response.getEntity(),"utf-8");
+        } catch (Exception e) {
+        }
+        return new Gson().fromJson(result, Customer.class);
+    }
+
+    //传入openId集合，获取客户对象集合
+    public static List<Customer> getCustomerInfoList(List<String> openIdList){
+
+        List<Customer> customerInfoList = new ArrayList<>();
+
+        for (String s : openIdList) {
+            Customer customerInfo = getCustomerInfo(s);
+
+            if (customerInfo == null){
+                App.ACCESS_TOKEN = WxUtils.getAccessToken();
+            }
+
+            customerInfoList.add(customerInfo);
+        }
+
+        return customerInfoList;
     }
 }

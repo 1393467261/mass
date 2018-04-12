@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.w3.org/1999/xhtml" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/bootstrap-theme.min.css}">
+    <title></title>
+</head>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/bootstrap.min.js}"></script>
+<script th:src="@{/js/exporting.js}"></script>
+<script th:src="@{/js/highcharts.js}"></script>
+<script th:src="@{/js/highcharts-more.js}"></script>
+<body  >
+
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div class="col-md-8">
+            <div class="tabbable" id="tabs-769458">
+                <ul class="nav nav-tabs">
+                    <li class="active">
+                        <a href="#panel-647368" data-toggle="tab">图文消息</a>
+                    </li>
+                    <li>
+                        <a href="#panel-484642" data-toggle="tab">其他消息</a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane active" id="panel-647368">
+
+                    </div>
+                    <div class="tab-pane" id="panel-484642">
+
+                    </div>
+                </div>
+            </div>
+            <!--表单-->
+            <form action="/send" method="post" name="my-form" enctype="multipart/form-data" role="form">
+                <div class="form-group">
+                    <hr>
+                    <label>主题</label>
+                    <input type="text" class="form-control" placeholder="主题输入" name="title">
+                    <hr>
+                    <label>正文</label>
+                    <textarea class="form-control" rows="3" placeholder="正文输入" name="text"></textarea>
+                    <hr>
+                    <label>插入图片,大小不超过2M,支持bmp/png/jpeg/jpg/gif格式</label>
+                    <br>
+                    <input type="file" name="my-file">
+                </div>
+                <hr>
+                <button type="submit" class="btn btn-primary">发送消息</button>
+            </form>
+            <!--进度条-->
+            <hr>
+            <div class="progress">
+                <div id="my-progress" class="progress-bar progress-bar-success" role="progressbar" style="width: 90%;">
+                </div>
+            </div>
+            <!--饼图-->
+            <div class="col-md-12">
+                <div id="container" style="margin: 0 auto"></div>
+            </div>
+        </div>
+        <!--历史消息-->
+        <div class="col-md-4">
+            <h4>历史消息</h4>
+            <hr>
+            <ul th:each="userinfo:${list}" class="hero-unit">
+                <li th:text="${userinfo.time}"></li>
+                <h4 th:text="${userinfo.title}"></h4>
+                <h5 th:text="${userinfo.text}"></h5>
+                <a class="btn btn-primary" th:href="@{/chart(id=${userinfo.id})}">查看详情</a>
+                <hr>
+            </ul>
+        </div>
+
+    </div>
+</div>
+<script type="text/javascript">
+    <!--使用ajax间隔一定秒数向服务器请求当前发送成功次数和用户总数,返回给前端显示进度条-->
+    // setInterval(function () {
+    // var percents;
+    // $.ajax({
+    //     url:"/percent",
+    //     type:"get",
+    //     success:function (data) {
+    //         percents = data;
+    //         document.getElementById("my-progress").style.width = percents + '%';
+    //     }
+    // });
+    // }, 200)
+</script>
+<script type="text/javascript">
+
+    var chart = new Highcharts.chart('container', {
+        chart: {
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false,
+            type: 'pie'
+        },
+        title: {
+            text: '发送状态'
+        },
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: true,
+                    format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                    }
+                }
+            }
+        },
+        series: [{
+            name: 'Brands',
+            colorByPoint: true,
+        }]
+    });
+
+    setInterval(function () {
+        $.ajax({
+            url:"/collection",
+            type:"get",
+            dataType: "json",
+            success:function (data) {
+                chart.series[0].setData(data)
+            }
+        });
+    }, 1000)
+
+</script>
+</body>
+</html>

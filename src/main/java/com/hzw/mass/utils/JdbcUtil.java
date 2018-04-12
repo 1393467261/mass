@@ -1,8 +1,11 @@
 package com.hzw.mass.utils;
 
+import com.hzw.mass.entity.Customer;
 import com.hzw.mass.entity.ErrorTypeCollect;
 import com.hzw.mass.entity.Fail;
 import com.hzw.mass.entity.Summary;
+import com.hzw.mass.service.Text;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -16,7 +19,7 @@ import java.util.List;
 public class JdbcUtil {
 
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
-    static final String DB_URL = "jdbc:mysql://112.74.36.19:3306/wx";
+    static final String DB_URL = "jdbc:mysql://112.74.36.19:3306/wx?useUnicode=true&characterEncoding=utf8";
     static final String USER = "admin";
     static final String PASS = "admin";
 
@@ -85,14 +88,16 @@ public class JdbcUtil {
         }
     }
     //将上传图片获取的url和mediaId写入数据库
-    public static void saveUrlAndMediaId(String url, String mediaId){
+    public static void saveUrlAndMediaId(String url, String mediaId, String title, String text){
 
         try {
-            String sql = "insert into summary(url, mediaId) values(?, ?)";
+            String sql = "insert into summary(url, mediaId, title, text) values(?, ?, ?, ?)";
             Connection connection = getConnection();
             PreparedStatement ps = connection.prepareStatement(sql);
             ps.setString(1, url);
             ps.setString(2, mediaId);
+            ps.setString(3, title);
+            ps.setString(4, text);
             ps.execute();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
@@ -130,7 +135,6 @@ public class JdbcUtil {
 
         Connection connection = null;
         PreparedStatement ps = null;
-        ResultSet set = null;
 
         try{
             connection = getConnection();
@@ -183,7 +187,7 @@ public class JdbcUtil {
         Connection connection = null;
         PreparedStatement ps = null;
         ResultSet set = null;
-        String sql = "SELECT errorCode,COUNT(errorCode) as count FROM fail where summaryId = ?   GROUP BY errorCode ";
+        String sql = "SELECT errorCode,COUNT(errorCode) as count FROM fail where summaryId = ? GROUP BY errorCode ";
         List<ErrorTypeCollect> list = new ArrayList<>();
 
         try{
@@ -228,5 +232,121 @@ public class JdbcUtil {
         }
 
         return summary;
+    }
+
+    public static Summary getLatestMessage() {
+
+        Connection connection = null;
+        PreparedStatement ps = null;
+        ResultSet set = null;
+        Summary summary = new Summary();
+        String sql = "Select * from summary order by id desc limit 1";
+
+        try{
+            connection = getConnection();
+            ps = connection.prepareStatement(sql);
+            set = ps.executeQuery();
+            set.next();
+            summary.setId(set.getInt("id"));
+            summary.setTitle(set.getString("title"));
+            summary.setText(set.getString("text"));
+            summary.setMediaId(set.getString("mediaId"));
+            summary.setUrl(set.getString("url"));
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            close(set, ps, connection);
+        }
+
+        return summary;
+    }
+
+    public static Boolean saveFail2Db(Fail fail){
+
+        Connection connection = null;
+        PreparedStatement ps = null;
+        ResultSet set = null;
+        Integer summaryId = JdbcUtil.getMaxId();
+        Boolean execute = false;
+
+        try{
+            connection = getConnection();
+            String sql = "insert into fail(summaryId, openId, errorCode) values(?, ?, ?)";
+            ps = connection.prepareStatement(sql);
+            ps.setInt(1, summaryId);
+            ps.setString(2, fail.getOpenId());
+            ps.setInt(3, fail.getErrorCode());
+            execute = ps.execute();
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            close(connection, ps);
+        }
+
+        return execute;
+    }
+
+    //传入所有客户的信息，写入数据库
+    public static void saveCustomerInfo2Db(List<Customer> list){
+
+        Connection connection = null;
+        PreparedStatement ps = null;
+        String sql = "replace into customer(subscribe, openid, nickname, sex, city, country, province, language, headimgurl, subscribe_time," +
+                "unionid, remark, groupid, subscribe_scene, qr_scene, qr_scene_str, update_time) " +
+                "values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try {
+            connection = getConnection();
+            ps = connection.prepareStatement(sql);
+
+            for (Customer customer : list) {
+                ps.setInt(1, customer.getSubscribe());
+                ps.setString(2, customer.getOpenid());
+                ps.setString(3, customer.getNickname());
+                ps.setInt(4, customer.getSex());
+                ps.setString(5, customer.getCity());
+                ps.setString(6, customer.getCountry());
+                ps.setString(7, customer.getProvince());
+                ps.setString(8, customer.getLanguage());
+                ps.setString(9, customer.getHeadimgurl());
+                ps.setInt(10, customer.getSubscribe_time());
+                ps.setString(11, customer.getUnionid());
+                ps.setString(12, customer.getRemake());
+                ps.setInt(13, customer.getGroupid());
+                ps.setString(14, customer.getSubscribe_scene());
+                ps.setInt(15, customer.getQr_scene());
+                ps.setString(16, customer.getQr_scene_str());
+                ps.setLong(17, System.currentTimeMillis());
+                ps.execute();
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }finally {
+            close(connection, ps);
+        }
+    }
+    //保存消息，返回id
+    public static Integer saveTextAndReturnId(Text text){
+
+        Connection connection = null;
+        PreparedStatement ps = null;
+        ResultSet set = null;
+        Integer id = null;
+        String sql = "insert into message(text_plan) values(?)";
+
+        try{
+            connection = getConnection();
+            ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            ps.setString(1, text.toString());
+            ps.execute();
+            set = ps.getGeneratedKeys();
+            if (set.next()){
+                id = set.getInt(1);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return id;
     }
 }

@@ -1,139 +1,116 @@
 <!DOCTYPE html>
-<html lang="zh-CN" xmlns:th="http://www.w3.org/1999/xhtml" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+<html lang="zh-CN" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/css/bootstrap-theme.min.css}">
-    <title></title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" th:href="@{/layui/css/layui.css}">
+<title>美翻微信群发工具</title>
+<style type="text/css">
+body{
+    padding: 10px;
+}
+</style>
 </head>
-<script th:src="@{/js/jquery.min.js}"></script>
-<script th:src="@{/js/bootstrap.min.js}"></script>
-<script th:src="@{/js/exporting.js}"></script>
-<script th:src="@{/js/highcharts.js}"></script>
-<script th:src="@{/js/highcharts-more.js}"></script>
-<body  >
-
-<div class="container-fluid">
-    <div class="row-fluid">
-        <div class="col-md-8">
-            <div class="tabbable" id="tabs-769458">
-                <ul class="nav nav-tabs">
-                    <li class="active">
-                        <a href="#panel-647368" data-toggle="tab">图文消息</a>
-                    </li>
-                    <li>
-                        <a href="#panel-484642" data-toggle="tab">其他消息</a>
-                    </li>
-                </ul>
-                <div class="tab-content">
-                    <div class="tab-pane active" id="panel-647368">
-
-                    </div>
-                    <div class="tab-pane" id="panel-484642">
-
-                    </div>
-                </div>
+<body>
+<div id="app">
+    <div class="layui-tab">
+        <ul class="layui-tab-title">
+            <li class="layui-this">历史记录</li>
+            <li>新建群发</li>
+        </ul>
+        <div class="layui-tab-content">
+            <div class="layui-tab-item">
+                这里是一个表格
             </div>
-            <!--表单-->
-            <form action="/send" method="post" name="my-form" enctype="multipart/form-data" role="form">
-                <div class="form-group">
-                    <hr>
-                    <label>主题</label>
-                    <input type="text" class="form-control" placeholder="主题输入" name="title">
-                    <hr>
-                    <label>正文</label>
-                    <textarea class="form-control" rows="3" placeholder="正文输入" name="text"></textarea>
-                    <hr>
-                    <label>插入图片,大小不超过2M,支持bmp/png/jpeg/jpg/gif格式</label>
-                    <br>
-                    <input type="file" name="my-file">
-                </div>
-                <hr>
-                <button type="submit" class="btn btn-primary">发送消息</button>
-            </form>
-            <!--进度条-->
-            <hr>
-            <div class="progress">
-                <div id="my-progress" class="progress-bar progress-bar-success" role="progressbar" style="width: 90%;">
-                </div>
-            </div>
-            <!--饼图-->
-            <div class="col-md-12">
-                <div id="container" style="margin: 0 auto"></div>
+            <div class="layui-tab-item layui-show">
+                <fieldset class="layui-elem-field">
+                    <legend>群发内容</legend>
+                    <div class="layui-field-box">
+                        <form class="layui-form" action="">
+                            <div class="layui-form-item layui-inline">
+                                <label class="layui-form-label">消息类型</label>
+                                <div class="layui-input-inline">
+                                    <select v-model="message_data.type" lay-ignore class="layui-input">
+                                        <option value="text">文本</option>
+                                        <option value="news">图文(外链)</option>
+                                        <option value="mpnews">图文(消息)</option>
+                                        <option value="image">图片</option>
+                                        <option value="voice">语音</option>
+                                        <option value="video">视频</option>
+                                        <option value="music">音乐</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div v-show="message_data.type == 'text'">
+                                <div class="layui-form-item layui-form-text">
+                                    <label class="layui-form-label">消息内容</label>
+                                    <div class="layui-input-block">
+                                        <textarea v-model="message_data.text.context" placeholder="请输入文本内容" class="layui-textarea"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-show="message_data.type == 'news'">
+                                <div class="layui-form-item layui-form-text">
+                                    <label class="layui-form-label">图片（外链）消息内容</label>
+                                    <div class="layui-input-block">
+                                        <textarea v-model="message_data.text.context" placeholder="请输入文本内容" class="layui-textarea"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="layui-form-item layui-inline">
+                                <div class="layui-input-inline">
+                                    <button @click="submit_message()" class="layui-btn" type="button">立即提交</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </fieldset>
             </div>
         </div>
-        <!--历史消息-->
-        <div class="col-md-4">
-            <h4>历史消息</h4>
-            <hr>
-            <ul th:each="userinfo:${list}" class="hero-unit">
-                <li th:text="${userinfo.time}"></li>
-                <h4 th:text="${userinfo.title}"></h4>
-                <h5 th:text="${userinfo.text}"></h5>
-                <a class="btn btn-primary" th:href="@{/chart(id=${userinfo.id})}">查看详情</a>
-                <hr>
-            </ul>
-        </div>
-
     </div>
 </div>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/layui/layui.all.js}"></script>
+<script src="//cdn.bootcss.com/vue/2.5.16/vue.min.js"></script>
 <script type="text/javascript">
-    <!--使用ajax间隔一定秒数向服务器请求当前发送成功次数和用户总数,返回给前端显示进度条-->
-    setInterval(function () {
-        var percents;
-        $.ajax({
-            url:"/percent",
-            type:"get",
-            success:function (data) {
-                percents = data;
-                document.getElementById("my-progress").style.width = percents + '%';
+var app = new Vue({
+    el: "#app",
+    data: {
+        message_data: {
+            type: "text",
+            text: {
+                context: ""
             }
-        });
-    }, 200)
-</script>
-<script type="text/javascript">
-    $.ajax({
-        url:"/collection",
-        type:"get",
-        dataType: "json",
-        success:function (data) {
-            chart.series[0].setData(data)
         }
-    });
+    },
+    computed: {
 
-    var chart = new Highcharts.chart('container', {
-        chart: {
-            plotBackgroundColor: null,
-            plotBorderWidth: null,
-            plotShadow: false,
-            type: 'pie'
-        },
-        title: {
-            text: '发送状态'
-        },
-        tooltip: {
-            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
-        },
-        plotOptions: {
-            pie: {
-                allowPointSelect: true,
-                cursor: 'pointer',
-                dataLabels: {
-                    enabled: true,
-                    format: '<b>{point.name}</b>: {point.percentage:.1f} %',
-                    style: {
-                        color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
-                    }
+    },
+    methods: {
+
+        submit_message: function () {
+            var index = layer.load(1, {
+                shade: [0.1, '#fff']
+            });
+            $.post("/send", this.message_data, function (data) {
+                layer.close(index);
+                if(data.code == 0){
+
+                } else {
+                    layer.alert(data.info);
                 }
-            }
-        },
-        series: [{
-            name: 'Brands',
-            colorByPoint: true,
-        }]
-    });
+            }, "json");
+        }
+        
+    },
+    mounted: function () {
+
+    }
+});
 </script>
 </body>
 </html>
