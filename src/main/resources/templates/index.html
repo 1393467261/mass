@@ -53,8 +53,14 @@ body{
                             </div>
 
                             <div v-show="message_data.type == 'news'">
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">单行输入框</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="title" lay-verify="title" autocomplete="off" placeholder="请输入标题" class="layui-input">
+                                    </div>
+                                </div>
                                 <div class="layui-form-item layui-form-text">
-                                    <label class="layui-form-label">图片（外链）消息内容</label>
+                                    <label class="layui-form-label">消息内容</label>
                                     <div class="layui-input-block">
                                         <textarea v-model="message_data.text.context" placeholder="请输入文本内容" class="layui-textarea"></textarea>
                                     </div>
