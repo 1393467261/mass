@@ -2,6 +2,8 @@ package com.hzw.mass.utils;
 
 import com.google.gson.Gson;
 import com.hzw.mass.entity.*;
+import com.hzw.mass.service.Text;
+import com.hzw.mass.service.TextText;
 import com.hzw.mass.wx.*;
 import com.rabbitmq.client.*;
 import org.apache.http.HttpResponse;
@@ -16,6 +18,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
@@ -295,5 +298,20 @@ public class WxUtils {
         }
 
         return customerInfoList;
+    }
+
+    //传入text_plan,获取相应的消息类型对象
+    public static Object getMessageByTextPlan(String textPlan){
+
+        //获取共有字段msgtype判断类型
+        HashMap hashMap = new Gson().fromJson(textPlan, HashMap.class);
+        String msgtype = (String) hashMap.get("msgtype");
+
+        //封装文本消息
+        if (msgtype.equals("text")){
+            return new Gson().fromJson(textPlan, Text.class);
+        }
+
+        return null;
     }
 }

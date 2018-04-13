@@ -1,9 +1,6 @@
 package com.hzw.mass.utils;
 
-import com.hzw.mass.entity.Customer;
-import com.hzw.mass.entity.ErrorTypeCollect;
-import com.hzw.mass.entity.Fail;
-import com.hzw.mass.entity.Summary;
+import com.hzw.mass.entity.*;
 import com.hzw.mass.service.Text;
 import com.sun.org.apache.xpath.internal.operations.Bool;
 
@@ -19,7 +16,7 @@ import java.util.List;
 public class JdbcUtil {
 
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
-    static final String DB_URL = "jdbc:mysql://112.74.36.19:3306/wx?useUnicode=true&characterEncoding=utf8";
+    static final String DB_URL = "jdbc:mysql://112.74.36.19:3306/wx?useUnicode=true&characterEncoding=utf-8";
     static final String USER = "admin";
     static final String PASS = "admin";
 
@@ -138,7 +135,7 @@ public class JdbcUtil {
 
         try{
             connection = getConnection();
-            String sql = "insert into fail(summaryId, openId, errorCode) values(?, ?, ?)";
+            String sql = "INSERT into fail(summaryId, openId, errorCode) values(?, ?, ?)";
             ps = connection.prepareStatement(sql);
             for (Fail fail : list) {
                 ps.setInt(1, id);
@@ -327,7 +324,7 @@ public class JdbcUtil {
         }
     }
     //保存消息，返回id
-    public static Integer saveTextAndReturnId(Text text){
+    public static Integer saveTextAndReturnId(String text){
 
         Connection connection = null;
         PreparedStatement ps = null;
@@ -338,7 +335,7 @@ public class JdbcUtil {
         try{
             connection = getConnection();
             ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            ps.setString(1, text.toString());
+            ps.setString(1, text);
             ps.execute();
             set = ps.getGeneratedKeys();
             if (set.next()){
@@ -348,5 +345,56 @@ public class JdbcUtil {
             e.printStackTrace();
         }
         return id;
+    }
+    //根据消息体查询对应的id
+    public static Integer getIdByMessage(String message){
+
+        Connection connection = null;
+        PreparedStatement ps = null;
+        ResultSet set = null;
+        Integer id = null;
+        String sql = "select message_id from message where text_plan = ? order by message_id desc limit 1";
+
+        try{
+            connection = getConnection();
+            ps = connection.prepareStatement(sql);
+            ps.setString(1, message);
+            set = ps.executeQuery();
+            set.next();
+            id = set.getInt("message_id");
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            close(set, ps, connection);
+        }
+
+        return id;
+    }
+
+    //获取message表中的数据并封装
+    public static List<Message> getMessageList(){
+
+        Connection connection = null;
+        PreparedStatement ps = null;
+        ResultSet set = null;
+        List<Message> messageList = new ArrayList<>();
+        String sql = "select * from message ORDER BY update_time desc";
+
+        try{
+            connection = getConnection();
+            ps = connection.prepareStatement(sql);
+            set = ps.executeQuery();
+            while (set.next()){
+                messageList.add(new Message(set.getInt("message_id"),
+                                            set.getString("text_plan"),
+                                            set.getString("update_time").replace(".0", "")));
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            close(set, ps, connection);
+        }
+
+        return messageList;
     }
 }

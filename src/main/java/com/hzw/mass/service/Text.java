@@ -19,6 +19,24 @@ public class Text extends OutputStream implements Serializable{
 
     TextText text;
 
+    String update_time;
+
+    public TextText getText() {
+        return text;
+    }
+
+    public void setText(TextText text) {
+        this.text = text;
+    }
+
+    public String getUpdate_time() {
+        return update_time;
+    }
+
+    public void setUpdate_time(String update_time) {
+        this.update_time = update_time;
+    }
+
     public String getTouser() {
         return touser;
     }

@@ -1,17 +1,23 @@
 package com.hzw.mass.utils;
 
 import com.google.gson.Gson;
+import com.hzw.mass.entity.ErrorMsg;
+import com.hzw.mass.entity.Fail;
 import com.hzw.mass.wx.App;
 import com.rabbitmq.client.*;
+import org.omg.CORBA.INTERNAL;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import static com.hzw.mass.utils.WxUtils.getrabbitmqFactory;
+import static com.hzw.mass.utils.WxUtils.sendToUser;
 
 /**
  * @Author: Hzw
@@ -47,16 +53,47 @@ class MyRunnable implements Runnable{
                     String json = new String(body);
                     HashMap map = new Gson().fromJson(json, HashMap.class);
                     String msgtype = (String) map.get("msgtype");
+                    System.out.println(msgtype);
                     App.ACCESS_TOKEN = WxUtils.getAccessToken();
-                    List<String> openIdList = WxUtils.getOpenIds(App.ACCESS_TOKEN).getData().getOpenid();
+                    //List<String> openIdList = WxUtils.getOpenIds(App.ACCESS_TOKEN).getData().getOpenid();
+                    List<String> openIdList = new ArrayList<>();
+                    openIdList.add("oRUz80_FTbCClMbeHJLD6oHUeAqE");
+                    openIdList.add("oRUz80_FTbCClMbeHJLD6oHUeAqE");
+                    Integer messageId = JdbcUtil.getIdByMessage(json);
                     switch (msgtype){
                         case "text":
-
                             //TODO 多线程发送消息
-                            String j = String.format(json, "");
+                            List<Fail> failList1 = new ArrayList<>();
+                            for (String openId : openIdList) {
+                                ErrorMsg textErrorMsg = sendToUser(App.ACCESS_TOKEN, String.format(json, openId));
+                                System.out.println(textErrorMsg);
+                                failList1.add(new Fail(openId, textErrorMsg.getErrcode()));
+                            }
+                            for (Fail fail : failList1) {
+                                System.out.println(fail);
+                            }
+
+                            JdbcUtil.saveFailList(messageId, failList1);
+                            break;
+
+                        case "news":
+                            List<Fail> failList2 = new ArrayList<>();
+                            for (String openId : openIdList) {
+                                ErrorMsg textErrorMsg = sendToUser(App.ACCESS_TOKEN, String.format(json, openId));
+                                failList2.add(new Fail(openId, textErrorMsg.getErrcode()));
+                            }
+                            JdbcUtil.saveFailList(messageId, failList2);
+                            break;
+
+                        case "image":
+                            List<Fail> failList3 = new ArrayList<>();
+                            for (String openId : openIdList) {
+                                ErrorMsg textErrorMsg = sendToUser(App.ACCESS_TOKEN, String.format(json, openId));
+                                failList3.add(new Fail(openId, textErrorMsg.getErrcode()));
+                            }
+                            JdbcUtil.saveFailList(messageId, failList3);
                             break;
                     }
-
 
 //                    //封装客户对象，包括openId和尝试次数，默认3次
 //                    String json = new String(body);

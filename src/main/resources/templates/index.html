@@ -43,6 +43,7 @@ body{
                                 </div>
                             </div>
 
+                            <!--文字消息-->
                             <div v-show="message_data.type == 'text'">
                                 <div class="layui-form-item layui-form-text">
                                     <label class="layui-form-label">消息内容</label>
@@ -52,6 +53,7 @@ body{
                                 </div>
                             </div>
 
+                            <!--图文消息-->
                             <div v-show="message_data.type == 'news'">
                                 <div class="layui-form-item">
                                     <label class="layui-form-label">单行输入框</label>
@@ -105,7 +107,7 @@ var app = new Vue({
             $.post("/send", this.message_data, function (data) {
                 layer.close(index);
                 if(data.code == 0){
-
+                    layer.alert(data.message_id);
                 } else {
                     layer.alert(data.info);
                 }

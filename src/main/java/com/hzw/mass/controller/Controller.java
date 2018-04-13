@@ -174,17 +174,10 @@ public class Controller {
         return mv;
     }
 
-    @RequestMapping("/upload/test10")
-    public String test10(@RequestParam(value = "file", required = false)MultipartFile file){
+    @RequestMapping("/history")
+    public String getHistory(){
 
-        try {
-//            String resp = UploadUtil.postFile(WxUtils.getAccessToken(), file);
-//            UploadResp uploadResp = new Gson().fromJson(resp, UploadResp.class);
-//            System.out.println(uploadResp.getUrl());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return file.getName();
+        //return new Gson().toJson(JdbcUtil.getMessageList()).replace("\"{", "{").replace("}\"", "}").replace("\\", "");
+        return new Gson().toJson(JdbcUtil.getMessageList());
     }
 }
