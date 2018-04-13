@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" th:href="@{/layui/css/layui.css}">
+    <title></title>
+</head>
+<body>
+<div id="app" style="padding: 30px">
+    <form class="layui-form" action="">
+        <div class="layui-form-item">
+            <label class="layui-form-label">单行输入框</label>
+            <div class="layui-input-block">
+                <input type="text" v-model="message_data.news.articles[0].title" name="title" lay-verify="title" autocomplete="off" placeholder="请输入标题" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">消息内容</label>
+            <div class="layui-input-block">
+                <textarea v-model="message_data.news.articles[0].description" placeholder="请输入文本内容" class="layui-textarea"></textarea>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">单行输入框</label>
+            <div class="layui-input-block">
+                <input type="text" v-model="message_data.news.articles[1].title" name="title" lay-verify="title" autocomplete="off" placeholder="请输入标题" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">消息内容</label>
+            <div class="layui-input-block">
+                <textarea v-model="message_data.news.articles[1].description" placeholder="请输入文本内容" class="layui-textarea"></textarea>
+            </div>
+        </div>
+
+        <div class="layui-input-inline">
+            <button @click="submit_message()" class="layui-btn" type="button">立即提交</button>
+        </div>
+    </form>
+</div>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/layui/layui.all.js}"></script>
+<script src="//cdn.bootcss.com/vue/2.5.16/vue.min.js"></script>
+<script type="text/javascript">
+    var app = new Vue({
+        el: "#app",
+        data: {
+            message_data: {
+                type: "news",
+                text: {
+                    context: "",
+                },
+                news: {
+                    articles: [{
+                        title: "",
+                        description: "",
+                        url: "",
+                        picurl: ""
+                    },{
+                        title: "",
+                        description: "",
+                        url: "",
+                        picurl: ""
+                    },{
+                        title: "",
+                        description: "",
+                        url: "",
+                        picurl: ""
+                    },{
+                        title: "",
+                        description: "",
+                        url: "",
+                        picurl: ""
+                    }]
+                },
+                json: ""
+            }
+        },
+        computed: {
+
+        },
+        methods: {
+            submit_message: function () {
+                var index = layer.load(1, {
+                    shade: [0.1, '#fff']
+                });
+                $.post("/test", this.message_data, function (data) {
+                    layer.close(index);
+                    if(data.code == 0){
+                        layer.alert(data.info);
+                    } else {
+                        layer.alert(data.info);
+                    }
+                }, "json");
+            },
+            get_history: function () {
+                this.message_data.type = 'history';
+                $.ajax({
+                    url:"/history",
+                    type:"get",
+                    dataType: "json",
+                    success:function (data) {
+                        app.message_data.json = data
+                    }
+                });
+            }
+
+        },
+        mounted: function () {
+
+        }
+    });
+</script>
+</body>
+</html>

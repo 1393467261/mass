@@ -49,9 +49,10 @@
                         <dd><a v-on:click="message_data.type = 'text'">文字消息</a></dd>
                         <dd><a v-on:click="message_data.type = 'pic'">图片消息</a></dd>
                         <dd><a v-on:click="message_data.type = 'news'">图文消息</a></dd>
-                        <dd><a v-on:click="message_data.type = 'news'">语音消息</a></dd>
-                        <dd><a v-on:click="message_data.type = 'news'">视频消息</a></dd>
-                        <dd><a v-on:click="message_data.type = 'news'">音乐消息</a></dd>
+                        <dd><a v-on:click="message_data.type = 'newses'">图文消息 V2.0</a></dd>
+                        <dd><a v-on:click="message_data.type = ''">语音消息</a></dd>
+                        <dd><a v-on:click="message_data.type = ''">视频消息</a></dd>
+                        <dd><a v-on:click="message_data.type = ''">音乐消息</a></dd>
                     </dl>
                 </li>
                 <li class="layui-nav-item"><a @click="get_history()">历史消息</a></li>
@@ -70,7 +71,8 @@
                     </div>
                     <div class="layui-tab-item layui-show">
                         <fieldset class="layui-elem-field">
-                            <legend>群发内容</legend>
+                            <legend v-if="message_data.type == 'history'">历史记录</legend>
+                            <legend v-else>群发内容</legend>
                             <div class="layui-field-box">
                                 <form class="layui-form" action="">
 
@@ -131,43 +133,25 @@
                                     <!--历史记录-->
                                     <div v-show="message_data.type == 'history'">
                                         <ul class="layui-timeline">
+
+                                            <div v-if="message_data.json != null" v-for="message in message_data.json">
+                                                <li class="layui-timeline-item">
+                                                    <i class="layui-icon layui-anim layui-anim-rotate layui-anim-loop layui-timeline-axis"></i>
+                                                    <div class="layui-timeline-content layui-text">
+                                                        <h3 class="layui-timeline-title">{{ message.update_time }}</h3>
+                                                        <blockquote class="layui-elem-quote">
+                                                            <p>layui 2.0 的一切准备工作似乎都已到位。发布之弦，一触即发。
+                                                            <br>不枉近百个日日夜夜与之为伴。因小而大，因弱而强。
+                                                            <br>无论它能走多远，抑或如何支撑？至少我曾倾注全心，无怨无悔 <i class="layui-icon"></i>
+                                                            </p>
+                                                        </blockquote>
+
+                                                    </div>
+                                                </li>
+                                            </div>
+
                                             <li class="layui-timeline-item">
-                                                <i class="layui-icon layui-timeline-axis"></i>
-                                                <div class="layui-timeline-content layui-text">
-                                                    <h3 class="layui-timeline-title">8月18日</h3>
-                                                    <p>
-                                                        layui 2.0 的一切准备工作似乎都已到位。发布之弦，一触即发。
-                                                        <br>不枉近百个日日夜夜与之为伴。因小而大，因弱而强。
-                                                        <br>无论它能走多远，抑或如何支撑？至少我曾倾注全心，无怨无悔 <i class="layui-icon"></i>
-                                                    </p>
-                                                </div>
-                                            </li>
-                                            <li class="layui-timeline-item">
-                                                <i class="layui-icon layui-timeline-axis"></i>
-                                                <div class="layui-timeline-content layui-text">
-                                                    <h3 class="layui-timeline-title">8月16日</h3>
-                                                    <p>杜甫的思想核心是儒家的仁政思想，他有<em>“致君尧舜上，再使风俗淳”</em>的宏伟抱负。个人最爱的名篇有：</p>
-                                                    <ul>
-                                                        <li>《登高》</li>
-                                                        <li>《茅屋为秋风所破歌》</li>
-                                                    </ul>
-                                                </div>
-                                            </li>
-                                            <li class="layui-timeline-item">
-                                                <i class="layui-icon layui-timeline-axis"></i>
-                                                <div class="layui-timeline-content layui-text">
-                                                    <h3 class="layui-timeline-title">8月15日</h3>
-                                                    <p>
-                                                        中国人民抗日战争胜利日
-                                                        <br>常常在想，尽管对这个国家有这样那样的抱怨，但我们的确生在了最好的时代
-                                                        <br>铭记、感恩
-                                                        <br>所有为中华民族浴血奋战的英雄将士
-                                                        <br>永垂不朽
-                                                    </p>
-                                                </div>
-                                            </li>
-                                            <li class="layui-timeline-item">
-                                                <i class="layui-icon layui-timeline-axis"></i>
+                                                <i class="layui-icon layui-anim layui-anim-rotate layui-anim-loop layui-timeline-axis"></i>
                                                 <div class="layui-timeline-content layui-text">
                                                     <div class="layui-timeline-title">过去</div>
                                                 </div>
@@ -177,7 +161,7 @@
 
 
 
-                                    <div class="layui-form-item layui-inline">
+                                    <div v-if="message_data.type != 'history'" class="layui-form-item layui-inline">
                                         <div class="layui-input-inline">
                                             <button @click="submit_message()" class="layui-btn" type="button">立即提交</button>
                                         </div>
@@ -195,7 +179,7 @@
 
     <div class="layui-footer">
         <!-- 底部固定区域 -->
-        © layui.com - 底部固定区域
+        Copyright © 2018 Meifan.All Rights Reserved.
     </div>
 </div>
 <script th:src="@{/js/jquery.min.js}"></script>
@@ -221,11 +205,14 @@
                     title: "",
                     description: "",
                     picurl: ""
-                }
+                },
+                json: ""
             }
         },
         computed: {
-
+            date: function () {
+                return this.message_data.json
+            }
         },
         methods: {
             submit_message: function () {
@@ -248,7 +235,7 @@
                     type:"get",
                     dataType: "json",
                     success:function (data) {
-                        alert(data[0].update_time)
+                        app.message_data.json = data
                     }
                 });
             }

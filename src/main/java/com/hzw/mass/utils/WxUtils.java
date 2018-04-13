@@ -46,13 +46,13 @@ public class WxUtils {
     }
     //获取图片信息模板
     public static String makePictureMessage(String openId, String mediaId) {
-        String jsonMsg = "{\n" +
-                "    \"touser\":\"%s\",\n" +
-                "    \"msgtype\":\"image\",\n" +
-                "    \"image\":\n" +
-                "    {\n" +
-                "      \"media_id\":\"%s\"\n" +
-                "    }\n" +
+        String jsonMsg = "{" +
+                "\"touser\":\"%s\"," +
+                "\"msgtype\":\"image\"," +
+                "\"image\":" +
+                "{" +
+                "\"media_id\":\"%s\"" +
+                "}" +
                 "}";
         return String.format(jsonMsg, openId, mediaId);
     }
@@ -60,19 +60,19 @@ public class WxUtils {
     public static String makePicAndTextMessage(String openId, String title, String description, String picUrl){
         title = title.replace("\"", "\\\"");
         description = description.replace("\"", "\\\"");
-        String jsonMsg = "{\n" +
-                "    \"touser\":\"%s\",\n" +
-                "    \"msgtype\":\"news\",\n" +
-                "    \"news\":{\n" +
-                "        \"articles\": [\n" +
-                "         {\n" +
-                "             \"title\":\"%s\",\n" +
-                "             \"description\":\"%s\",\n" +
-                "             \"url\":\"url\",\n" +
-                "             \"picurl\":\"%s\"\n" +
-                "         }\n" +
-                "         ]\n" +
-                "    }\n" +
+        String jsonMsg = "{" +
+                "\"touser\":\"%s\"," +
+                "\"msgtype\":\"news\"," +
+                "\"news\":{" +
+                "\"articles\": [" +
+                "{" +
+                "\"title\":\"%s\"," +
+                "\"description\":\"%s\"," +
+                "\"url\":\"url\"," +
+                "\"picurl\":\"%s\"" +
+                "}" +
+                "]" +
+                "}" +
                 "}";
         return String.format(jsonMsg, openId, title, description, picUrl);
     }

@@ -149,6 +149,19 @@ public class Test {
     @org.junit.Test
     public void test8(){
 
-        System.out.println(new Gson().toJson(JdbcUtil.getMessageList()).replace("\"{", "{").replace("}\"", "}").replace("\\", ""));
+        System.out.println(WxUtils.makePicAndTextMessage("%s", "hehe", "hello", "www.baidu.com"));
+    }
+
+    @org.junit.Test
+    public void test9(){
+
+        TextText textText = new TextText("hello hzw");
+        Text text = new Text();
+        text.setContent(textText);
+        text.setTouser("jame");
+        text.setMsgtype("text");
+        text.setUpdate_time("2018");
+
+        System.out.println(new Gson().toJson(text));
     }
 }

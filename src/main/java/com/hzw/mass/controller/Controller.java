@@ -2,6 +2,8 @@ package com.hzw.mass.controller;
 
 import com.google.gson.Gson;
 import com.hzw.mass.entity.*;
+import com.hzw.mass.service.Text;
+import com.hzw.mass.service.TextText;
 import com.hzw.mass.utils.JdbcUtil;
 import com.hzw.mass.utils.UploadUtil;
 import com.hzw.mass.utils.Utils;
@@ -153,14 +155,10 @@ public class Controller {
         }
     }
     //接收传入的id，返回id对应的消息的发送情况
-    @RequestMapping("/chart")
-    public ModelAndView chart(ModelAndView mv, @RequestParam("id")Integer id){
+    @RequestMapping("/newses")
+    public ModelAndView chart(ModelAndView mv){
 
-        mv.setViewName("chart");
-        List<ErrorTypeCollect> errorTypeCollect = JdbcUtil.getErrorTypeCollect(id);
-        mv.addObject("jsonString", new Gson().toJson(errorTypeCollect));
-        Summary summary = JdbcUtil.getSummary(id);
-        mv.addObject("summary", summary);
+        mv.setViewName("newses");
 
         return mv;
     }
@@ -177,7 +175,9 @@ public class Controller {
     @RequestMapping("/history")
     public String getHistory(){
 
-        //return new Gson().toJson(JdbcUtil.getMessageList()).replace("\"{", "{").replace("}\"", "}").replace("\\", "");
-        return new Gson().toJson(JdbcUtil.getMessageList());
+        return new Gson().toJson(JdbcUtil.getMessageList()).replace("\"{", "{").replace("}\"", "}").replace("\\", "");
+        //return new Gson().toJson(JdbcUtil.getMessageList());
+
+        //return "[{\"message_id\":58,\"text_plan\":{\"touser\":\"%s\",\"msgtype\":\"text\",\"text\":{\"content\":\"sss\"}},\"update_time\":\"2018-04-13 15:43:48\"}]";
     }
 }
