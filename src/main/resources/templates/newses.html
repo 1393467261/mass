@@ -10,6 +10,7 @@
 <body>
 <div id="app" style="padding: 30px">
     <form class="layui-form" action="">
+        <h2>主标题</h2>
         <div class="layui-form-item">
             <label class="layui-form-label">单行输入框</label>
             <div class="layui-input-block">
@@ -22,6 +23,19 @@
                 <textarea v-model="message_data.news.articles[0].description" placeholder="请输入文本内容" class="layui-textarea"></textarea>
             </div>
         </div>
+        <label class="layui-form-label">上传图片</label>
+        <div class="layui-upload">
+            <!--<button type="button" class="layui-btn" id="test2">多图片上传</button>-->
+            <div class="layui-upload-drag" id="test10">
+                <i class="layui-icon"></i>
+                <p>点击上传，或将文件拖拽到此处</p>
+            </div>
+        </div>
+        <blockquote class="layui-elem-quote layui-quote-nm" style="margin-top: 10px;">
+            预览图:
+            <div class="layui-upload-list" id="demo10"></div>
+        </blockquote>
+        <!--主题2-->
         <div class="layui-form-item">
             <label class="layui-form-label">单行输入框</label>
             <div class="layui-input-block">
@@ -34,11 +48,99 @@
                 <textarea v-model="message_data.news.articles[1].description" placeholder="请输入文本内容" class="layui-textarea"></textarea>
             </div>
         </div>
+        <label class="layui-form-label">上传图片</label>
+        <div class="layui-upload">
+            <!--<button type="button" class="layui-btn" id="test2">多图片上传</button>-->
+            <div class="layui-upload-drag" id="test11">
+                <i class="layui-icon"></i>
+                <p>点击上传，或将文件拖拽到此处</p>
+            </div>
+        </div>
+        <blockquote class="layui-elem-quote layui-quote-nm" style="margin-top: 10px;">
+            预览图:
+            <div class="layui-upload-list" id="demo11"></div>
+        </blockquote>
+
+        <div class="layui-row">
+            <div class="layui-col-xs4">
+                <div class="grid-demo grid-demo-bg1">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">单行输入框</label>
+                        <div class="layui-input-block">
+                            <input type="text" v-model="message_data.news.articles[1].title" name="title" lay-verify="title" autocomplete="off" placeholder="请输入标题" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-form-item layui-form-text">
+                        <label class="layui-form-label">消息内容</label>
+                        <div class="layui-input-block">
+                            <textarea v-model="message_data.news.articles[1].description" placeholder="请输入文本内容" class="layui-textarea"></textarea>
+                        </div>
+                    </div>
+                    <label class="layui-form-label">上传图片</label>
+                    <div class="layui-upload">
+                        <!--<button type="button" class="layui-btn" id="test2">多图片上传</button>-->
+                        <div class="layui-upload-drag" id="test12">
+                            <i class="layui-icon"></i>
+                            <p>点击上传，或将文件拖拽到此处</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-xs4">
+                <div class="grid-demo">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">单行输入框</label>
+                        <div class="layui-input-block">
+                            <input type="text" v-model="message_data.news.articles[1].title" name="title" lay-verify="title" autocomplete="off" placeholder="请输入标题" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-form-item layui-form-text">
+                        <label class="layui-form-label">消息内容</label>
+                        <div class="layui-input-block">
+                            <textarea v-model="message_data.news.articles[1].description" placeholder="请输入文本内容" class="layui-textarea"></textarea>
+                        </div>
+                    </div>
+                    <label class="layui-form-label">上传图片</label>
+                    <div class="layui-upload">
+                        <!--<button type="button" class="layui-btn" id="test2">多图片上传</button>-->
+                        <div class="layui-upload-drag" id="test13">
+                            <i class="layui-icon"></i>
+                            <p>点击上传，或将文件拖拽到此处</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-xs4">
+                <div class="grid-demo grid-demo-bg1">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">单行输入框</label>
+                        <div class="layui-input-block">
+                            <input type="text" v-model="message_data.news.articles[1].title" name="title" lay-verify="title" autocomplete="off" placeholder="请输入标题" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-form-item layui-form-text">
+                        <label class="layui-form-label">消息内容</label>
+                        <div class="layui-input-block">
+                            <textarea v-model="message_data.news.articles[1].description" placeholder="请输入文本内容" class="layui-textarea"></textarea>
+                        </div>
+                    </div>
+                    <label class="layui-form-label">上传图片</label>
+                    <div class="layui-upload">
+                        <!--<button type="button" class="layui-btn" id="test2">多图片上传</button>-->
+                        <div class="layui-upload-drag" id="test14">
+                            <i class="layui-icon"></i>
+                            <p>点击上传，或将文件拖拽到此处</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="layui-input-inline">
             <button @click="submit_message()" class="layui-btn" type="button">立即提交</button>
         </div>
     </form>
+
 </div>
 <script th:src="@{/js/jquery.min.js}"></script>
 <script th:src="@{/layui/layui.all.js}"></script>
@@ -86,7 +188,7 @@
                 var index = layer.load(1, {
                     shade: [0.1, '#fff']
                 });
-                $.post("/test", this.message_data, function (data) {
+                $.post("/send", this.message_data, function (data) {
                     layer.close(index);
                     if(data.code == 0){
                         layer.alert(data.info);
@@ -112,6 +214,41 @@
 
         }
     });
+</script>
+<script>
+    layui.use('upload', function() {
+        var $ = layui.jquery
+            , upload = layui.upload;
+
+        //图文拖拽上传主题1
+        upload.render({
+            elem: '#test10'
+            , url: '/upload/test'
+            , before: function (obj) {
+                //预读本地文件示例，不支持ie8
+                obj.preview(function (index, file, result) {
+                    $('#demo10').append('<img src="' + result + '" alt="' + file.name + '" class="layui-upload-img">')
+                });
+            }
+            , done: function (res) {
+                app.message_data.news.articles[0].picurl = res.url
+            }
+        });
+        //图文拖拽上传主题2
+        upload.render({
+            elem: '#test11'
+            , url: '/upload/test'
+            , before: function (obj) {
+                //预读本地文件示例，不支持ie8
+                obj.preview(function (index, file, result) {
+                    $('#demo11').append('<img src="' + result + '" alt="' + file.name + '" class="layui-upload-img">')
+                });
+            }
+            , done: function (res) {
+                app.message_data.news.articles[1].picurl = res.url
+            }
+        });
+    })
 </script>
 </body>
 </html>

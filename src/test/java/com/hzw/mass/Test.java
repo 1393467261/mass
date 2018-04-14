@@ -2,6 +2,7 @@ package com.hzw.mass;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.hzw.mass.controller.Send;
 import com.hzw.mass.entity.*;
 import com.hzw.mass.service.Text;
 import com.hzw.mass.service.TextText;
@@ -10,6 +11,7 @@ import com.hzw.mass.utils.UploadUtil;
 import com.hzw.mass.utils.WxUtils;
 import com.hzw.mass.wx.App;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.swing.plaf.metal.OceanTheme;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -38,19 +40,6 @@ public class Test {
         list.add(new Fail("oRUz80_FTbCClMbeHJLD6oHUeAqE", errorMsg.getErrcode()));
 
         WxUtils.afterSend(JdbcUtil.getMaxId(), list);
-    }
-
-    @org.junit.Test
-    public void test(){
-
-        String token = WxUtils.getAccessToken();
-        String openId = "oRUz80_FTbCClMbeHJLD6oHUeAqE";
-        String uploadRespJson = UploadUtil.postFile(token, "C:\\Users\\13934\\Desktop\\liulei\\2.png");
-        UploadResp uploadResp = new Gson().fromJson(uploadRespJson, UploadResp.class);
-        System.out.println(uploadResp);
-        String message = WxUtils.makePicAndTextMessage(openId, "美好的一天", "亲爱的，今天太阳好温暖啊", uploadResp.getUrl());
-        ErrorMsg errorMsg = WxUtils.sendToUser(token, message);
-        System.out.println(errorMsg);
     }
 
     @org.junit.Test
@@ -149,7 +138,6 @@ public class Test {
     @org.junit.Test
     public void test8(){
 
-        System.out.println(WxUtils.makePicAndTextMessage("%s", "hehe", "hello", "www.baidu.com"));
     }
 
     @org.junit.Test
@@ -163,5 +151,17 @@ public class Test {
         text.setUpdate_time("2018");
 
         System.out.println(new Gson().toJson(text));
+    }
+
+    @org.junit.Test
+    public void test10(){
+
+        System.out.println(new Gson().toJson(JdbcUtil.getMessageList()).replace("\"{", "{").replace("}\"", "}").replace("\\u003d", "=").replace("\\", ""));
+    }
+
+    @org.junit.Test
+    public void test11(){
+
+        System.out.println(Send.class.getClass().getResource("/").getPath());
     }
 }

@@ -172,12 +172,4 @@ public class Controller {
         return mv;
     }
 
-    @RequestMapping("/history")
-    public String getHistory(){
-
-        return new Gson().toJson(JdbcUtil.getMessageList()).replace("\"{", "{").replace("}\"", "}").replace("\\", "");
-        //return new Gson().toJson(JdbcUtil.getMessageList());
-
-        //return "[{\"message_id\":58,\"text_plan\":{\"touser\":\"%s\",\"msgtype\":\"text\",\"text\":{\"content\":\"sss\"}},\"update_time\":\"2018-04-13 15:43:48\"}]";
-    }
 }

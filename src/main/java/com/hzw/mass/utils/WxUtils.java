@@ -57,24 +57,34 @@ public class WxUtils {
         return String.format(jsonMsg, openId, mediaId);
     }
     //获取图文消息
-    public static String makePicAndTextMessage(String openId, String title, String description, String picUrl){
-        title = title.replace("\"", "\\\"");
-        description = description.replace("\"", "\\\"");
+    public static String makePicAndTextMessage(String openId, List<Article> list){
+//        title = title.replace("\"", "\\\"");
+//        description = description.replace("\"", "\\\"");
+//        String jsonMsg = "{" +
+//                "\"touser\":\"%s\"," +
+//                "\"msgtype\":\"news\"," +
+//                "\"news\":{" +
+//                "\"articles\": [" +
+//                "{" +
+//                "\"title\":\"%s\"," +
+//                "\"description\":\"%s\"," +
+//                "\"url\":\"url\"," +
+//                "\"picurl\":\"%s\"" +
+//                "}" +
+//                "]" +
+//                "}" +
+//                "}";
+        String articles = new Gson().toJson(list);
         String jsonMsg = "{" +
                 "\"touser\":\"%s\"," +
                 "\"msgtype\":\"news\"," +
                 "\"news\":{" +
-                "\"articles\": [" +
-                "{" +
-                "\"title\":\"%s\"," +
-                "\"description\":\"%s\"," +
-                "\"url\":\"url\"," +
-                "\"picurl\":\"%s\"" +
-                "}" +
-                "]" +
+                "\"articles\":" + articles +
                 "}" +
                 "}";
-        return String.format(jsonMsg, openId, title, description, picUrl);
+
+
+        return String.format(jsonMsg, openId);
     }
     //通过accessToken获取用户信息
     public static UserList getOpenIds(String accessToken){
