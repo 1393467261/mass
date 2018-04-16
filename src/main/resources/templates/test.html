@@ -1,11 +1,17 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.w3.org/1999/xhtml" xmlns:v-on="http://www.w3.org/1999/xhtml">
+<html xmlns:th="http://www.w3.org/1999/xhtml" xmlns:v-on="http://www.w3.org/1999/xhtml"
+      xmlns:v-bind="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title>美翻微信群发</title>
     <link rel="stylesheet" th:href="@{/layui/css/layui.css}">
 </head>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/layui/layui.all.js}"></script>
+<script th:src="@{/js/vue.js}"></script>
+<script th:src="@{/js/echarts.js}"></script>
+<script src="//cdn.bootcss.com/vue/2.5.16/vue.min.js"></script>
 <body class="layui-layout-body">
 <div class="layui-layout layui-layout-admin" id="app">
     <div class="layui-header">
@@ -47,11 +53,8 @@
                     <a class="" href="javascript:;">消息类型</a>
                     <dl class="layui-nav-child">
                         <dd><a v-on:click="message_data.type = 'text'">文字消息</a></dd>
-                        <dd><a v-on:click="message_data.type = 'pic'">图片消息</a></dd>
+                        <dd><a v-on:click="message_data.type = 'image'">图片消息</a></dd>
                         <dd><a v-on:click="message_data.type = 'news'">图文消息</a></dd>
-                        <dd><a v-on:click="message_data.type = ''">语音消息</a></dd>
-                        <dd><a v-on:click="message_data.type = ''">视频消息</a></dd>
-                        <dd><a v-on:click="message_data.type = ''">音乐消息</a></dd>
                     </dl>
                 </li>
                 <li class="layui-nav-item"><a @click="get_history()">历史消息</a></li>
@@ -99,7 +102,7 @@
                                                         <br>
                                                         <label class="layui-form-label">跳转链接</label>
                                                         <div class="layui-input-block">
-                                                            <input type="text" placeholder="请输入跳转链接" v-model="item.title" class="layui-input">
+                                                            <input type="text" placeholder="请输入跳转链接" v-model="item.url" class="layui-input">
                                                         </div>
                                                     </div>
                                                     <div class="layui-form-item layui-form-text">
@@ -126,7 +129,7 @@
                                     </div>
 
                                     <!--图片消息-->
-                                    <div v-show="message_data.type == 'pic'">
+                                    <div v-show="message_data.type == 'image'">
                                         <label class="layui-form-label">上传图片</label>
                                         <div class="layui-upload">
                                             <!--<button type="button" class="layui-btn" id="test2">多图片上传</button>-->
@@ -145,7 +148,7 @@
                                     <div v-show="message_data.type == 'history'">
                                         <ul class="layui-timeline">
 
-                                            <div v-if="message_data.json != null" v-for="message in message_data.json">
+                                            <div v-if="message_data.json != null" v-for="(message, key) in message_data.json">
                                                 <li class="layui-timeline-item">
                                                     <i class="layui-icon layui-anim layui-anim-rotate layui-anim-loop layui-timeline-axis"></i>
                                                     <div class="layui-timeline-content layui-text">
@@ -155,11 +158,18 @@
                                                                 <h3>{{message.text_plan.news.articles[0].title}}</h3>
                                                                 <h4>{{message.text_plan.news.articles[0].description}}</h4>
                                                             </blockquote>
+                                                            <div class="layui-input-inline">
+                                                                <button @click="resend_message(message.message_id)" class="layui-btn" type="button">重发</button>
+                                                            </div>
                                                         </div>
+
                                                         <div v-if="message.text_plan.msgtype == 'text'">
                                                             <blockquote class="layui-elem-quote">
                                                                 <h4>{{message.text_plan.text.content}}</h4>
                                                             </blockquote>
+                                                            <div class="layui-input-inline">
+                                                                <button @click="resend_message(message.message_id)" class="layui-btn" type="button">重发</button>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </li>
@@ -175,7 +185,6 @@
                                     </div>
 
                                     <div v-if="message_data.type != 'history'" class="layui-form-item layui-inline">
-                                        <blockquote class="layui-elem-quote"><h3>选择要发送的人群，不选默认全部发送</h3></blockquote>
                                         <div class="layui-input-inline">
                                             <button @click="submit_message()" class="layui-btn" type="button">立即发送</button>
                                         </div>
@@ -196,14 +205,10 @@
         Copyright © 2018 Meifan.All Rights Reserved.
     </div>
 </div>
-<script th:src="@{/js/jquery.min.js}"></script>
-<script th:src="@{/layui/layui.all.js}"></script>
-<script th:src="@{/js/vue.js}"></script>
 <script>
     layui.use('element', function() {
         var $ = layui.jquery
             , element = layui.element; //Tab的切换功能，切换事件监听等，需要依赖element模块
-
     })
 </script>
 <script>
@@ -223,9 +228,13 @@
                         picurl: ""
                     }]
                 },
+                image:{
+                    media_id: "",
+                },
                 json: "",
+                resend_id: 0,
             },
-            bind_img_key: 0
+            bind_img_key: 0,
         },
         computed: {
             date: function () {
@@ -260,6 +269,22 @@
                     }
                 }, "json");
             },
+
+            resend_message: function (message_id) {
+                var index = layer.load(1, {
+                    shade: [0.1, '#fff']
+                });
+                this.message_data.resend_id = message_id;
+                $.post("/resend/all", this.message_data, function (data) {
+                    layer.close(index);
+                    if(data.code == 0){
+                        layer.alert(data.info);
+                    } else {
+                        layer.alert(data.info);
+                    }
+                }, "json");
+            },
+
             get_history: function () {
                 this.message_data.type = 'history';
                 $.ajax({
@@ -271,7 +296,7 @@
                         //alert(data[0].text_plan.news.articles[0].picurl)
                     }
                 });
-            }
+            },
 
         },
         mounted: function () {
@@ -280,6 +305,7 @@
                 elem: '.upload_img',
                 url: '/upload/picture',
                 done: function(res){
+                    //alert(res.url)
                     self.message_data.news.articles[self.bind_img_key].picurl = res.url;
                 },
                 error: function(){
@@ -293,77 +319,24 @@
 <script>
     layui.use('upload', function(){
         var $ = layui.jquery
-            ,upload = layui.upload;
+            , upload = layui.upload;
 
-        //图文拖拽上传主题1
-        upload.render({
-            elem: '#test10'
-            , url: '/upload/picture'
-            , before: function (obj) {
-                //预读本地文件示例，不支持ie8
-                obj.preview(function (index, file, result) {
-                    $('#demo10').append('<img src="' + result + '" alt="' + file.name + '" class="layui-upload-img">')
-                });
-            }
-            , done: function (res) {
-                app.message_data.news.articles[0].picurl = res.url
-            }
-        });
-        //图文拖拽上传主题2
-        upload.render({
-            elem: '#test11'
-            , url: '/upload/picture'
-            , before: function (obj) {
-                //预读本地文件示例，不支持ie8
-                obj.preview(function (index, file, result) {
-                    $('#demo11').append('<img src="' + result + '" alt="' + file.name + '" class="layui-upload-img">')
-                });
-            }
-            , done: function (res) {
-                app.message_data.news.articles[1].picurl = res.url
-            }
-        });
-        //图文拖拽上传主题3
-        upload.render({
-            elem: '#test12'
-            , url: '/upload/picture'
-            , before: function (obj) {
-                //预读本地文件示例，不支持ie8
-                obj.preview(function (index, file, result) {
-                    $('#demo11').append('<img src="' + result + '" alt="' + file.name + '" class="layui-upload-img">')
-                });
-            }
-            , done: function (res) {
-                app.message_data.news.articles[2].picurl = res.url
-            }
-        });
-        //图文拖拽上传主题4
-        upload.render({
-            elem: '#test13'
-            , url: '/upload/picture'
-            , before: function (obj) {
-                //预读本地文件示例，不支持ie8
-                obj.preview(function (index, file, result) {
-                    $('#demo11').append('<img src="' + result + '" alt="' + file.name + '" class="layui-upload-img">')
-                });
-            }
-            , done: function (res) {
-                app.message_data.news.articles[3].picurl = res.url
-            }
-        });
-
-        //图片上传
         upload.render({
             elem: '#test1'
-            ,url: '/upload/picture'
-            ,before: function(obj){
+            , url: '/upload/picture2'
+            , before: function (obj) {
                 //预读本地文件示例，不支持ie8
-                obj.preview(function(index, file, result){
-                    $('#demo1').append('<img src="'+ result +'" alt="'+ file.name +'" class="layui-upload-img">')
+                obj.preview(function (index, file, result) {
+                    $('#demo1').append('<img src="' + result + '" alt="' + file.name + '" class="layui-upload-img">')
                 });
             }
-            ,done: function(res){
-                console.log(res)
+            , done: function (res) {
+                if (res.code == 1){
+                    alert(res.info)
+                }
+                if (res.code == 0){
+                    app.message_data.image.media_id = res.media_id
+                }
             }
         });
     });

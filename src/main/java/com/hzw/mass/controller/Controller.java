@@ -156,9 +156,19 @@ public class Controller {
     }
     //接收传入的id，返回id对应的消息的发送情况
     @RequestMapping("/newses")
-    public ModelAndView chart(ModelAndView mv){
+    public ModelAndView chart(){
 
+        ModelAndView mv = new ModelAndView();
         mv.setViewName("newses");
+
+        return mv;
+    }
+
+    @RequestMapping("/template")
+    public ModelAndView template(){
+
+        ModelAndView mv = new ModelAndView();
+        mv.setViewName("template");
 
         return mv;
     }

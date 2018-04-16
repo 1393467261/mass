@@ -10,6 +10,8 @@ import com.hzw.mass.service.TextText;
 import com.hzw.mass.utils.JdbcUtil;
 import com.hzw.mass.utils.UploadUtil;
 import com.hzw.mass.utils.WxUtils;
+import org.springframework.util.ClassUtils;
+import org.springframework.util.ResourceUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,6 +22,7 @@ import org.springframework.web.servlet.View;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.*;
@@ -95,9 +98,25 @@ public class Send {
                     String description = request.getParameter(paraDescription);
                     String url = request.getParameter(paraUrl);
                     String picurl = request.getParameter(paraPicUrl);
-                    if (picurl.length() > 5){
-                        articleList.add(new Article(title, description, url, picurl));
+                    if (title.length() < 1){
+                        list.put("code", 1);
+                        list.put("info", "输入标题");
+                        return list;
+                    }else if (description.length() < 1){
+                        list.put("code", 1);
+                        list.put("info", "输入内容");
+                        return list;
+                    }else if (url.length() < 1){
+                        list.put("code", 1);
+                        list.put("info", "输入外链url");
+                        return list;
+                    }else if (picurl.length() < 1){
+                        list.put("code", 1);
+                        list.put("info", "请上传图片");
+                        return list;
                     }
+
+                    articleList.add(new Article(title, description, url, picurl));
                 }
 
                 String message = WxUtils.makePicAndTextMessage("%s", articleList);
@@ -106,6 +125,15 @@ public class Send {
 
                 list.put("code", 0);
                 list.put("info", "发送图文成功");
+                break;
+
+            case "image":
+                String mediaId = request.getParameter("image[media_id]");
+                String picMessage = WxUtils.makePictureMessage("%s", mediaId).replace(" ", "");
+                JdbcUtil.saveTextAndReturnId(picMessage);
+                WxUtils.sendToQueue(picMessage);
+                list.put("code", 0);
+                list.put("info", "发送图片成功");
                 break;
 
             default:
@@ -210,7 +238,7 @@ public class Send {
                 list.put("info", "发送图文消息成功");
                 break;
 
-            case "pic":
+            case "image":
                 String mediaId = (String) request.getSession().getServletContext().getAttribute("mediaid");
                 String picMessage = WxUtils.makePictureMessage("%s", mediaId).replace(" ", "");
                 JdbcUtil.saveTextAndReturnId(picMessage);
@@ -274,16 +302,16 @@ public class Send {
     }
 
     /**
-    *@Description: 长传图片到本地
+    *@Description: 上传图片到本地
     */
     @RequestMapping("/upload/picture")
-    public String upload(@RequestParam("file")MultipartFile file, HttpServletRequest request){
+    public String upload(@RequestParam("file")MultipartFile file, HttpServletRequest request) throws FileNotFoundException {
 
         String contentType = file.getContentType();
         String fileName = file.getOriginalFilename();
-        String filePath ="F:\\Project\\mass\\src\\main\\webapp\\img\\";
+        //String filePath ="F:\\Project\\mass\\src\\main\\webapp\\img\\";
+        String filePath = ClassUtils.getDefaultClassLoader().getResource("").getPath() + "static/img/";
         String url = "img/" + fileName;
-
         try{
             UploadUtil.uploadFile(file.getBytes(), filePath, fileName);
         }catch(Exception e){
@@ -291,5 +319,44 @@ public class Send {
         }
 
         return "{\"url\":\"" + url + "\"}";
+    }
+    /**
+     *@Description: 由于图片发送需要media_id，所以上传到服务器
+     */
+    @RequestMapping("/upload/picture2")
+    public Map upload2(@RequestParam("file")MultipartFile file, HttpServletRequest request){
+
+        Map<Object, Object> list = new HashMap<>();
+        String s = UploadUtil.postFile(WxUtils.getAccessToken(), file);
+        UploadResp uploadResp = new Gson().fromJson(s, UploadResp.class);
+        String id = uploadResp.getMedia_id();
+
+        if (uploadResp == null){
+            list.put("code", 1);
+            list.put("info", "上传失败");
+        }
+
+        list.put("code", 0);
+        list.put("media_id", id);
+
+        return list;
+    }
+    /**
+     *@Description: 对指定消息进行重发,对象为所有人
+     */
+    @RequestMapping("/resend/all")
+    public Map resend(HttpServletRequest request){
+
+        Map<Object, Object> list = new HashMap<>();
+
+        String parameter = request.getParameter("resend_id");
+        Integer resend_id = Integer.parseInt(parameter);
+        String text_plan = JdbcUtil.getTextPlanById(resend_id);
+        WxUtils.sendToQueue(text_plan);
+
+        list.put("code", 0);
+        list.put("info", "重发成功");
+
+        return list;
     }
 }

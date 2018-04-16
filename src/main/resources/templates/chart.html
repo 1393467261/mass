@@ -1,83 +1,75 @@
 <!DOCTYPE html>
-<html lang="zh-CN" xmlns:th="http://www.w3.org/1999/xhtml">
+<html lang="zh-CN" xmlns:th="http://www.w3.org/1999/xhtml" xmlns:v-bind="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="utf-8">
-    <meta name="referrer" content="never" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/css/bootstrap-theme.min.css}">
     <title></title>
 </head>
-<script th:src="@{/js/jquery.min.js}"></script>
-<script th:src="@{/js/exporting.js}"></script>
-<script th:src="@{/js/highcharts.js}"></script>
-<script th:src="@{/js/highcharts-more.js}"></script>
-<script th:src="@{/js/solid-gauge.js}"></script>
-<script th:src="@{/js/bootstrap.min.js}"></script>
-<script th:src="@{https://img.hcharts.cn/highcharts-plugins/highcharts-zh_CN.js}"></script>
-<body style="padding: 20px">
-<div class="layui-inline">
-    <label class="layui-form-label">日期时间范围</label>
-    <div class="layui-input-inline">
-        <input type="text" class="layui-input" id="test10" placeholder=" - ">
-    </div>
+<body>
+<!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+<div id="app">
+    <div id="main" style="height:300px"></div>
 </div>
-<!--破解防止盗取链接的脚本-->
+<!-- ECharts单文件引入 -->
+<script th:src="@{/js/echarts.js}"></script>
+<script th:src="@{js/jquery.min.js}"></script>
+<script th:src="@{/js/vue.js}"></script>
 <script type="text/javascript">
-    function showImg(url) {
-        var frameid = 'frameimg' + Math.random();
-        console.debug(frameid);
-        console.debug(url);
-        window.img = '<img id="img" style="width:100%" src=\'' + url + '?' + Math.random() + '\' /><script>window.onload = function() { parent.document.getElementById(\'' + frameid + '\').height = document.getElementById(\'img\').height+\'px\'; }<' + '/script>';
-        document.write('<iframe id="' + frameid + '" src="javascript:parent.img;" frameBorder="0" scrolling="no" width="60%"></iframe>');
-    }
-</script>
-<div class="col-md-6">
-    <script type="text/javascript">
-        showImg('[[${summary.url}]]');
-    </script>
-    <hr>
-    <h4 th:text="${summary.title}"></h4>
-    <hr>
-    <h5 th:text="${summary.text}"></h5>
-</div>
-<div id="container" class="col-md-6"></div>
-</body>
-<script th:inline="javascript">
-    var chart = new Highcharts.chart('container', {
-        chart: {
-            plotBackgroundColor: null,
-            plotBorderWidth: null,
-            plotShadow: false,
-            type: 'pie'
-        },
-        title: {
-            text: '发送状态'
-        },
-        tooltip: {
-            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
-        },
-        plotOptions: {
-            pie: {
-                allowPointSelect: true,
-                cursor: 'pointer',
-                dataLabels: {
-                    enabled: true,
-                    format: '<b>{point.name}</b>: {point.percentage:.1f} %',
-                    style: {
-                        color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+
+            var myChart = echarts.init(document.getElementById('main'));
+
+
+            var option = {
+                tooltip : {
+                    trigger: 'item',
+                    formatter: "{a} <br/>{b} : {c} ({d}%)"
+                },
+                toolbox: {
+                    show : true,
+                    feature : {
+                        mark : {show: true},
+                        dataView : {show: true, readOnly: false},
+                        magicType : {
+                            show: true,
+                            type: ['pie', 'funnel'],
+                            option: {
+                                funnel: {
+                                    x: '25%',
+                                    width: '50%',
+                                    funnelAlign: 'left',
+                                    max: 1548
+                                }
+                            }
+                        },
+                        restore : {show: true},
+                        saveAsImage : {show: true}
                     }
-                }
-            }
-        },
-        series: [{
-            name: 'Brands',
-            colorByPoint: true,
-        }]
-    });
-    //获取域中的 数据，填充图表
-var json = $.parseJSON([[${jsonString}]]);
-chart.series[0].setData(json);
+                },
+                calculable : true,
+                series : [
+                    {
+                        name:'访问来源',
+                        type:'pie',
+                        radius : '55%',
+                        center: ['50%', '60%'],
+                        data:[
+                            {value:335, name:'直接访问'},
+                            {value:310, name:'邮件营销'},
+                            {value:234, name:'联盟广告'},
+                            {value:135, name:'视频广告'},
+                            {value:1548, name:'搜索引擎'}
+                        ]
+                    }
+                ]
+            };
+
+            myChart.setOption(option);
 </script>
+<script>
+    new Vue({
+        el: "#app",
+    })
+</script>
+</body>
 </html>
