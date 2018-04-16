@@ -8,11 +8,13 @@ package com.hzw.mass.entity;
  */
 public class Fail {
 
+    private Integer id;
     private String openId;
     private Integer errorCode;
     private Integer summaryId;
 
-    public Fail(String openId, Integer errorCode, Integer summaryId) {
+    public Fail(Integer id, String openId, Integer errorCode, Integer summaryId) {
+        this.id = id;
         this.openId = openId;
         this.errorCode = errorCode;
         this.summaryId = summaryId;
@@ -21,6 +23,19 @@ public class Fail {
     public Fail(String openId, Integer errcode) {
         this.openId = openId;
         this.errorCode = errcode;
+    }
+
+    public Fail(int id, String openId) {
+        this.id = id;
+        this.openId = openId;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public Integer getSummaryId() {

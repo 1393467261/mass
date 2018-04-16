@@ -33,36 +33,6 @@ import java.util.*;
 @RestController
 public class Controller {
 
-    //返回json
-    @RequestMapping("/collection")
-    public String json(){
-
-        List<ErrorTypeCollect> errorTypeCollect = JdbcUtil.getErrorTypeCollect(JdbcUtil.getMaxId());
-
-        return new Gson().toJson(errorTypeCollect);
-    }
-
-    //Ajax发送请求，返回发送失败的次数
-    @RequestMapping(value = "/fail", method = RequestMethod.GET)
-    public Integer getFailCount(){
-
-        return App.FAIL_COUNT;
-    }
-
-    //Ajax发送请求，返回订阅者总数
-    @RequestMapping(value = "/total", method = RequestMethod.GET)
-    public Integer getUserCount(){
-
-        return App.USER_COUNT;
-    }
-
-    //Ajax发送请求，返回成功发送的次数
-    @RequestMapping(value = "/success", method = RequestMethod.GET)
-    public Integer getSuccessCount(){
-
-        return App.SUCCESS_COUNT;
-    }
-
     @RequestMapping("/send_old")
     public ModelAndView upload(@RequestParam(value = "my-file", required = false)MultipartFile file,
                          HttpServletRequest request) throws Exception {
@@ -155,11 +125,11 @@ public class Controller {
         }
     }
     //接收传入的id，返回id对应的消息的发送情况
-    @RequestMapping("/newses")
+    @RequestMapping("/chart")
     public ModelAndView chart(){
 
         ModelAndView mv = new ModelAndView();
-        mv.setViewName("newses");
+        mv.setViewName("chart");
 
         return mv;
     }

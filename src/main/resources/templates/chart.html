@@ -4,72 +4,259 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" th:href="@{/layui/css/layui.css}">
     <title></title>
 </head>
-<body>
-<!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+<body style="padding: 30px;">
+
 <div id="app">
-    <div id="main" style="height:300px"></div>
+    <div class="layui-row">
+
+        <div class="layui-col-xs5">
+            <div v-for="message in collection">
+                <table class="layui-table">
+                    <thead>
+                    <tr>
+                        <th>消息ID</th>
+                        <th>状态码</th>
+                        <th>次数</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>{{ message.messageId }}</td>
+                        <td>{{ errorType(message.name) }}</td>
+                        <td>{{ message.y }}</td>
+                        <td><button @click="resend(message.messageId, message.name)" type="button" class="layui-btn">重发</button></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="layui-col-xs2" style="padding-left: 40px">
+            <table class="layui-table">
+                <thead>
+                <tr>
+                    <th>需发送</th>
+                    <th>已发送</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>{{ total }}</td>
+                    <td>{{ sended }}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="container" class="layui-col-xs5"></div>
+
+    </div>
+
+    <hr>
+    <div align="center">
+        <select v-model="flush_timeout">
+            <option disabled value="">请选择刷新间隔</option>
+            <option>1000</option>
+            <option>2000</option>
+            <option>5000</option>
+            <option>10000</option>
+        </select>
+        <button @click="flush()" class="layui-btn" type="button">手动刷新</button>
+        <button @click="resendfail()" class="layui-btn" type="button">重发未成功</button>
+        <button @click="resendall()" class="layui-btn" type="button">全部重发</button>
+
+    </div>
+
 </div>
-<!-- ECharts单文件引入 -->
-<script th:src="@{/js/echarts.js}"></script>
+
+<script th:src="@{/js/highcharts.js}"></script>
 <script th:src="@{js/jquery.min.js}"></script>
 <script th:src="@{/js/vue.js}"></script>
+<script th:src="@{/layui/layui.all.js}"></script>
+<script>
+    layui.use('element', function() {
+        var $ = layui.jquery
+            , element = layui.element; //Tab的切换功能，切换事件监听等，需要依赖element模块
+    })
+</script>
+<script type="text/javascript">
+    var app = new Vue({
+        el: "#app",
+        data: {
+            collection: "",
+            flush_timeout: 2000,
+            _intval: null,
+            total: 0,
+            sended: 0,
+        },
+        computed: {
+        },
+        methods: {
+            errorType: function (code) {
+                if (code == 0){
+                    return "发送成功";
+                }
+                if (code == 45047){
+                    return "客服接口下行条数超过上限";
+                }else{
+                    return code;
+                }
+            },
+            flush: function () {
+                window.location.href="/detail?message_id=" + [[${message_id}]];
+            },
+            resend: function (message_id, code) {
+                var index = layer.load(1, {
+                    shade: [0.1, '#fff']
+                });
+                $.ajax({
+                    url:"/resend?message_id=" + message_id + "&code=" + code,
+                    type:"get",
+                    dataType:"json",
+                    success:function (data) {
+                        layer.close(index);
+                        layer.alert(data.info)
+                    }
+                })
+            },
+            resendfail: function () {
+                var index = layer.load(1, {
+                    shade: [0.1, '#fff']
+                });
+                $.ajax({
+                    url:"/resend_fail?message_id=" + [[${message_id}]],
+                    type:"get",
+                    dataType:"json",
+                    success:function (data) {
+                        layer.close(index);
+                        layer.alert(data.info)
+                    }
+                })
+            },
+            resendall: function () {
+                var index = layer.load(1, {
+                    shade: [0.1, '#fff']
+                });
+                $.ajax({
+                    url:"/resend_all?message_id=" + [[${message_id}]],
+                    type:"get",
+                    dataType:"json",
+                    success:function (data) {
+                        layer.close(index);
+                        layer.alert(data.info)
+                    }
+                });
+            }
+        },
+        mount: function () {
+            var self = this;
+        },
+        watch: {
+            flush_timeout: function (n, o){
+                var self = this;
+                clearInterval(this._intval);
+                var id = setInterval(function () {
+                    $.ajax({
+                        url:"/collection?message_id=" + [[${message_id}]],
+                        type:"get",
+                        dataType:"json",
+                        success:function (data) {
+                            self._intval = id;
+                            chart.series[0].setData(data.json);
+                            self.collection = data.json;
+                        }
+                    })
+                }, n);
+            }
+        }
+    });
+
+    $.ajax({
+        url:"/collection?message_id=" + [[${message_id}]],
+        type:"get",
+        dataType:"json",
+        success:function (data) {
+            chart.series[0].setData(data.json);
+            app.collection = data.json;
+        }
+    })
+
+   app._intval = setInterval(function () {
+       $.ajax({
+           url:"/collection?message_id=" + [[${message_id}]],
+           type:"get",
+           dataType:"json",
+           success:function (data) {
+               chart.series[0].setData(data.json);
+               app.collection = data.json;
+           }
+       })
+   }, 500);
+
+    setInterval(function () {
+        $.ajax({
+            url:"/total",
+            type:"get",
+            dataType:"json",
+            success:function (data) {
+                app.total = data
+            }
+        })
+    }, 500);
+
+    setInterval(function () {
+        $.ajax({
+            url:"/sended?message_id=" + [[${message_id}]],
+            type:"get",
+            dataType:"json",
+            success:function (data) {
+                app.sended = data
+            }
+        })
+    }, 500);
+</script>
 <script type="text/javascript">
 
-            var myChart = echarts.init(document.getElementById('main'));
-
-
-            var option = {
-                tooltip : {
-                    trigger: 'item',
-                    formatter: "{a} <br/>{b} : {c} ({d}%)"
-                },
-                toolbox: {
-                    show : true,
-                    feature : {
-                        mark : {show: true},
-                        dataView : {show: true, readOnly: false},
-                        magicType : {
-                            show: true,
-                            type: ['pie', 'funnel'],
-                            option: {
-                                funnel: {
-                                    x: '25%',
-                                    width: '50%',
-                                    funnelAlign: 'left',
-                                    max: 1548
-                                }
-                            }
-                        },
-                        restore : {show: true},
-                        saveAsImage : {show: true}
+    var chart = new Highcharts.chart('container', {
+        chart: {
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false,
+            type: 'pie'
+        },
+        title: {
+            text: '发送状态'
+        },
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: true,
+                    format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                    style: {
+                        color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
                     }
-                },
-                calculable : true,
-                series : [
-                    {
-                        name:'访问来源',
-                        type:'pie',
-                        radius : '55%',
-                        center: ['50%', '60%'],
-                        data:[
-                            {value:335, name:'直接访问'},
-                            {value:310, name:'邮件营销'},
-                            {value:234, name:'联盟广告'},
-                            {value:135, name:'视频广告'},
-                            {value:1548, name:'搜索引擎'}
-                        ]
-                    }
-                ]
-            };
+                }
+            }
+        },
+        series: [{
+            name: 'Brands',
+            colorByPoint: true,
+        }]
+    });
 
-            myChart.setOption(option);
 </script>
-<script>
-    new Vue({
-        el: "#app",
-    })
+<script th:inline="javascript">
+    // var message = [[${collection}]];
+    // chart.series[0].setData(message);
 </script>
 </body>
 </html>

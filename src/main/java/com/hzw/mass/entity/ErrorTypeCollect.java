@@ -10,10 +10,20 @@ public class ErrorTypeCollect {
 
     private Integer name;
     private Integer y;
+    private Integer messageId;
 
-    public ErrorTypeCollect(Integer name, Integer y) {
+    public ErrorTypeCollect(Integer name, Integer y, Integer messageId) {
         this.name = name;
         this.y = y;
+        this.messageId = messageId;
+    }
+
+    public Integer getMessageId() {
+        return messageId;
+    }
+
+    public void setMessageId(Integer messageId) {
+        this.messageId = messageId;
     }
 
     public Integer getName() {
@@ -33,11 +43,4 @@ public class ErrorTypeCollect {
         this.y = y;
     }
 
-    @Override
-    public String toString() {
-        return "ErrorTypeCollect{" +
-                "name=" + name +
-                ", y=" + y +
-                '}';
-    }
 }

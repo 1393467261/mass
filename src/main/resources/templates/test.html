@@ -10,7 +10,7 @@
 <script th:src="@{/js/jquery.min.js}"></script>
 <script th:src="@{/layui/layui.all.js}"></script>
 <script th:src="@{/js/vue.js}"></script>
-<script th:src="@{/js/echarts.js}"></script>
+<script th:src="@{/js/highcharts.js}"></script>
 <script src="//cdn.bootcss.com/vue/2.5.16/vue.min.js"></script>
 <body class="layui-layout-body">
 <div class="layui-layout layui-layout-admin" id="app">
@@ -159,7 +159,7 @@
                                                                 <h4>{{message.text_plan.news.articles[0].description}}</h4>
                                                             </blockquote>
                                                             <div class="layui-input-inline">
-                                                                <button @click="resend_message(message.message_id)" class="layui-btn" type="button">重发</button>
+                                                                <button @click="get_detail(message.message_id)" class="layui-btn" type="button">查看详情</button>
                                                             </div>
                                                         </div>
 
@@ -168,7 +168,7 @@
                                                                 <h4>{{message.text_plan.text.content}}</h4>
                                                             </blockquote>
                                                             <div class="layui-input-inline">
-                                                                <button @click="resend_message(message.message_id)" class="layui-btn" type="button">重发</button>
+                                                                <button @click="get_detail(message.message_id)" class="layui-btn" type="button">查看详情</button>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -186,7 +186,7 @@
 
                                     <div v-if="message_data.type != 'history'" class="layui-form-item layui-inline">
                                         <div class="layui-input-inline">
-                                            <button @click="submit_message()" class="layui-btn" type="button">立即发送</button>
+                                            <button @click="submit_message()" data-method="notice" class="layui-btn" type="button">立即发送</button>
                                         </div>
                                     </div>
 
@@ -197,14 +197,25 @@
                 </div>
             </div>
 
+            <div v-if="message_data.type != 'history'" class="layui-form-item layui-inline">
+                <div class="site-demo-button" id="layerDemo" style="margin-bottom: 0;">
+                    <button data-method="notice" id="myButton" class="layui-btn" style="display: none"></button>
+                </div>
+            </div>
+
         </div>
     </div>
+
 
     <div class="layui-footer">
         <!-- 底部固定区域 -->
         Copyright © 2018 Meifan.All Rights Reserved.
     </div>
 </div>
+
+<!--图表-->
+<!--<div id="container" style="height: 300px"></div>-->
+
 <script>
     layui.use('element', function() {
         var $ = layui.jquery
@@ -233,6 +244,8 @@
                 },
                 json: "",
                 resend_id: 0,
+                message_id: 0,
+                collection: [],
             },
             bind_img_key: 0,
         },
@@ -263,22 +276,8 @@
                 $.post("/sendtest", this.message_data, function (data) {
                     layer.close(index);
                     if(data.code == 0){
-                        layer.alert(data.info);
-                    } else {
-                        layer.alert(data.info);
-                    }
-                }, "json");
-            },
-
-            resend_message: function (message_id) {
-                var index = layer.load(1, {
-                    shade: [0.1, '#fff']
-                });
-                this.message_data.resend_id = message_id;
-                $.post("/resend/all", this.message_data, function (data) {
-                    layer.close(index);
-                    if(data.code == 0){
-                        layer.alert(data.info);
+                        app.message_data.message_id = data.message_id;
+                        $("#myButton").click();
                     } else {
                         layer.alert(data.info);
                     }
@@ -298,6 +297,19 @@
                 });
             },
 
+            get_collection: function () {
+                var self = this;
+                $.post("/collection", this.message_data, function (data) {
+                    console.log(data);
+                    self.message_data.collection = data.json;
+                }, "json");
+            },
+
+            get_detail: function (message_id) {
+                var self = this;
+                window.location.href="/detail?message_id="+message_id;
+            }
+
         },
         mounted: function () {
             var self = this;
@@ -305,7 +317,6 @@
                 elem: '.upload_img',
                 url: '/upload/picture',
                 done: function(res){
-                    //alert(res.url)
                     self.message_data.news.articles[self.bind_img_key].picurl = res.url;
                 },
                 error: function(){
@@ -313,6 +324,70 @@
                 }
             });
         }
+    });
+
+    layui.use('layer', function(){ //独立版的layer无需执行这一句
+        var $ = layui.jquery, layer = layui.layer; //独立版的layer无需执行这一句
+
+        //触发事件
+        var active = {
+            setTop: function(){
+                var that = this;
+                //多窗口模式，层叠置顶
+                layer.open({
+                    type: 2 //此处以iframe举例
+                    ,title: '当你选择该窗体时，即会在最顶端'
+                    ,area: ['390px', '260px']
+                    ,shade: 0
+                    ,maxmin: true
+                    ,offset: [ //为了演示，随机坐标
+                        Math.random()*($(window).height()-300)
+                        ,Math.random()*($(window).width()-390)
+                    ]
+                    ,content: 'http://layer.layui.com/test/settop.html'
+                    ,btn: ['继续弹出', '全部关闭'] //只是为了演示
+                    ,yes: function(){
+                        $(that).click();
+                    }
+                    ,btn2: function(){
+                        layer.closeAll();
+                    }
+
+                    ,zIndex: layer.zIndex //重点1
+                    ,success: function(layero){
+                        layer.setTop(layero); //重点2
+                    }
+                });
+            }
+            ,notice: function(){
+                //示范一个公告层
+                layer.open({
+                    type: 1
+                    ,title: false //不显示标题栏
+                    ,closeBtn: false
+                    ,area: '300px;'
+                    ,shade: 0.8
+                    ,id: 'LAY_layuipro' //设定一个id，防止重复弹出
+                    ,btn: ['火速围观', '残忍拒绝']
+                    ,btnAlign: 'c'
+                    ,moveType: 1 //拖拽模式，0或者1
+                    ,content: '<div style="padding: 50px; line-height: 22px; background-color: #393D49; color: #fff; font-weight: 300;">发送成功！<br>是否浏览发送详情？<br>'
+                    ,success: function(layero){
+                        var btn = layero.find('.layui-layer-btn');
+                        btn.find('.layui-layer-btn0').attr({
+                            href: '/detail?message_id=' + app.message_data.message_id
+                            ,target: '_blank'
+                        });
+                    }
+                });
+            }
+        };
+
+        $('#layerDemo .layui-btn').on('click', function(){
+            var othis = $(this), method = othis.data('method');
+            active[method] ? active[method].call(this, othis) : '';
+        });
+
     });
 </script>
 <!--文件上传-->
@@ -340,6 +415,9 @@
             }
         });
     });
+</script>
+<script>
+
 </script>
 </body>
 </html>

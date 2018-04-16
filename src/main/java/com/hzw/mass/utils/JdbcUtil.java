@@ -3,6 +3,7 @@ package com.hzw.mass.utils;
 import com.hzw.mass.entity.*;
 import com.hzw.mass.service.Text;
 import com.sun.org.apache.xpath.internal.operations.Bool;
+import org.omg.CORBA.INTERNAL;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -200,7 +201,7 @@ public class JdbcUtil {
             ps.setInt(1, summaryId);
             set = ps.executeQuery();
             while (set.next()) {
-                list.add(new ErrorTypeCollect(set.getInt("errorCode"), set.getInt("count")));
+                list.add(new ErrorTypeCollect(set.getInt("errorCode"), set.getInt("count"), summaryId));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -420,6 +421,7 @@ public class JdbcUtil {
         try{
             connection = getConnection();
             ps = connection.prepareStatement(sql);
+            ps.setInt(1, id);
             set = ps.executeQuery();
             set.next();
             textPlan = set.getString("text_plan");
@@ -430,5 +432,160 @@ public class JdbcUtil {
         }
 
         return textPlan;
+    }
+
+    /**
+    *@Description: 根据状态码和messageId查找对应的发送失败的记录
+    */
+    public static List<Fail> getFailListByCodeAndMessageId(Integer messageId, Integer code){
+
+        Connection connection = null;
+        PreparedStatement ps = null;
+        ResultSet set = null;
+        String sql = "select * from fail where errorCode = ? and summaryId = ?";
+        List<Fail> list = new ArrayList<>();
+
+        try{
+            connection = getConnection();
+            ps = connection.prepareStatement(sql);
+            ps.setInt(1, code);
+            ps.setInt(2, messageId);
+            set = ps.executeQuery();
+            while (set.next()){
+                list.add(new Fail(set.getInt("id"), set.getString("openId")));
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            close(set, ps, connection);
+        }
+
+        return list;
+    }
+    /**
+    *@Description: 传入要更新的记录的id和状态码,更新数据库
+    */
+    public static void updateFailCodeById(Integer id, Integer code){
+
+        Connection connection = null;
+        PreparedStatement ps = null;
+        String sql = "update fail set errorCode = ? where id = ?";
+
+        try{
+            connection = getConnection();
+            ps = connection.prepareStatement(sql);
+            ps.setInt(1, code);
+            ps.setInt(2, id);
+            ps.executeUpdate();
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            close(connection, ps);
+        }
+    }
+    /**
+    *@Description: 传入messageId，查询该消息未发送成功即errorCode不等于0的用户
+    */
+    public static List<Fail> getFailExceptCodeIsZero(Integer messageId){
+
+        Connection connection = null;
+        PreparedStatement ps = null;
+        ResultSet set = null;
+        String sql = "select * from fail where errorCode != 0 and summaryId = ?";
+        List<Fail> list = new ArrayList<>();
+
+        try{
+            connection = getConnection();
+            ps = connection.prepareStatement(sql);
+            ps.setInt(1, messageId);
+            set = ps.executeQuery();
+            while (set.next()){
+                list.add(new Fail(set.getInt("id"), set.getString("openId")));
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            close(set, ps, connection);
+        }
+
+        return list;
+    }
+    /**
+    *@Description: 根据messageId获取所有客户
+    */
+    public static List<Fail> getFailByMessageId(Integer messageId){
+
+        Connection connection = null;
+        PreparedStatement ps = null;
+        ResultSet set = null;
+        String sql = "select * from fail where summaryId = ?";
+        List<Fail> list = new ArrayList<>();
+
+        try{
+            connection = getConnection();
+            ps = connection.prepareStatement(sql);
+            ps.setInt(1, messageId);
+            set = ps.executeQuery();
+            while (set.next()){
+                list.add(new Fail(set.getInt("id"), set.getString("openId")));
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            close(set, ps, connection);
+        }
+
+        return list;
+    }
+    /**
+    *@Description: 获取数据库中用户总数
+    */
+    public static Integer getCustomerCount(){
+
+        Connection connection = null;
+        PreparedStatement ps = null;
+        ResultSet set = null;
+        Integer count = 0;
+        String sql = "select count(*) as count from customer";
+
+        try{
+            connection = getConnection();
+            ps = connection.prepareStatement(sql);
+            set = ps.executeQuery();
+            set.next();
+            count = set.getInt("count");
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            close(set, ps, connection);
+        }
+
+        return count;
+    }
+    /**
+    *@Description: 获取某条消息已经发送给用户的个数
+    */
+    public static Integer getSendedCount(Integer message_id){
+
+        Connection connection = null;
+        PreparedStatement ps = null;
+        ResultSet set = null;
+        Integer count = 0;
+        String sql = "select count(*) as count from fail where summaryId = ?";
+
+        try{
+            connection = getConnection();
+            ps = connection.prepareStatement(sql);
+            ps.setInt(1, message_id);
+            set = ps.executeQuery();
+            set.next();
+            count = set.getInt("count");
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            close(set, ps, connection);
+        }
+
+        return count;
     }
 }

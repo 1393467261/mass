@@ -1,18 +1,17 @@
 package com.hzw.mass.controller;
 
 import com.google.gson.Gson;
-import com.hzw.mass.entity.Article;
-import com.hzw.mass.entity.ErrorMsg;
-import com.hzw.mass.entity.Message;
-import com.hzw.mass.entity.UploadResp;
+import com.hzw.mass.entity.*;
 import com.hzw.mass.service.Text;
 import com.hzw.mass.service.TextText;
 import com.hzw.mass.utils.JdbcUtil;
 import com.hzw.mass.utils.UploadUtil;
 import com.hzw.mass.utils.WxUtils;
+import com.hzw.mass.wx.App;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -72,6 +71,7 @@ public class Send {
 
                 list.put("code", 0);
                 list.put("info", "发送文字成功");
+                list.put("message_id", message_id);
                 break;
 
             case "news":
@@ -120,20 +120,22 @@ public class Send {
                 }
 
                 String message = WxUtils.makePicAndTextMessage("%s", articleList);
-                JdbcUtil.saveTextAndReturnId(message);
+                Integer message_id_news = JdbcUtil.saveTextAndReturnId(message);
                 WxUtils.sendToQueue(message);
 
                 list.put("code", 0);
                 list.put("info", "发送图文成功");
+                list.put("message_id", message_id_news);
                 break;
 
             case "image":
                 String mediaId = request.getParameter("image[media_id]");
                 String picMessage = WxUtils.makePictureMessage("%s", mediaId).replace(" ", "");
-                JdbcUtil.saveTextAndReturnId(picMessage);
+                Integer message_id_image = JdbcUtil.saveTextAndReturnId(picMessage);
                 WxUtils.sendToQueue(picMessage);
                 list.put("code", 0);
                 list.put("info", "发送图片成功");
+                list.put("message_id", message_id_image);
                 break;
 
             default:
@@ -342,21 +344,120 @@ public class Send {
         return list;
     }
     /**
-     *@Description: 对指定消息进行重发,对象为所有人
-     */
-    @RequestMapping("/resend/all")
-    public Map resend(HttpServletRequest request){
+    *@Description: 对指定消息id的发送情况进行统计
+    */
+    //返回json
+    @RequestMapping(value = "/collection")
+    public Map collection(HttpServletRequest request){
 
         Map<Object, Object> list = new HashMap<>();
 
-        String parameter = request.getParameter("resend_id");
-        Integer resend_id = Integer.parseInt(parameter);
-        String text_plan = JdbcUtil.getTextPlanById(resend_id);
-        WxUtils.sendToQueue(text_plan);
+        String parameter = request.getParameter("message_id");
+
+        Integer message_id = Integer.parseInt(parameter);
+        List<ErrorTypeCollect> errorTypeCollect = JdbcUtil.getErrorTypeCollect(message_id);
+
+        list.put("code", 0);
+        list.put("info", "重发成功");
+        list.put("json", errorTypeCollect);
+
+        return list;
+    }
+    /**
+    *@Description: 根据id跳转到对应的消息详情页面
+    */
+    @RequestMapping("/detail")
+    public ModelAndView detail(@RequestParam("message_id")Integer message_id){
+
+        ModelAndView mv = new ModelAndView();
+        mv.setViewName("chart");
+
+        List<ErrorTypeCollect> errorTypeCollect = JdbcUtil.getErrorTypeCollect(message_id);
+        mv.addObject("collection", errorTypeCollect);
+        mv.addObject("message_id", message_id);
+
+        return mv;
+    }
+    /**
+    *@Description: 传入messageId，错误状态码，重发给相应的客户，并修改数据库
+    */
+    @RequestMapping("/resend")
+    public Map resend(@RequestParam("message_id")Integer message_id, @RequestParam("code")Integer code){
+
+        App.ACCESS_TOKEN = WxUtils.getAccessToken();
+        //查出对应的数据
+        List<Fail> resendFailList = JdbcUtil.getFailListByCodeAndMessageId(message_id, code);
+        //获取消息模板
+        String textPlan = JdbcUtil.getTextPlanById(message_id);
+        //遍历重发，更新数据库
+        for (Fail fail : resendFailList) {
+            ErrorMsg errorMsg = WxUtils.sendToUser(App.ACCESS_TOKEN, String.format(textPlan, fail.getOpenId()));
+            JdbcUtil.updateFailCodeById(fail.getId(), errorMsg.getErrcode());
+        }
+
+        Map<Object, Object> list = new HashMap();
+        list.put("code", 0);
+        list.put("info", "重发成功");
+
+        return list;
+    }
+    /**
+    *@Description: 传入消息id，将其重发到未收到的客户中
+    */
+    @RequestMapping("/resend_fail")
+    public Map resendFail(@RequestParam("message_id")Integer message_id){
+
+        App.ACCESS_TOKEN = WxUtils.getAccessToken();
+        List<Fail> failList = JdbcUtil.getFailExceptCodeIsZero(message_id);
+        String textPlan = JdbcUtil.getTextPlanById(message_id);
+        System.out.println(textPlan);
+
+        for (Fail fail : failList) {
+            ErrorMsg errorMsg = WxUtils.sendToUser(App.ACCESS_TOKEN, String.format(textPlan, fail.getOpenId()));
+            System.out.println(errorMsg.getErrcode());
+            JdbcUtil.updateFailCodeById(fail.getId(), errorMsg.getErrcode());
+        }
+
+        Map<Object, Object> list = new HashMap();
+        list.put("code", 0);
+        list.put("info", "重发成功");
+
+        return list;
+    }
+    /**
+     *@Description: 对指定消息进行重发,对象为所有人
+     */
+    @RequestMapping("/resend_all")
+    public Map resend(@RequestParam("message_id")Integer message_id){
+
+        Map<Object, Object> list = new HashMap<>();
+
+        App.ACCESS_TOKEN = WxUtils.getAccessToken();
+        List<Fail> failList = JdbcUtil.getFailByMessageId(message_id);
+        String textPlan = JdbcUtil.getTextPlanById(message_id);
+
+        for (Fail fail : failList) {
+            ErrorMsg errorMsg = WxUtils.sendToUser(App.ACCESS_TOKEN, String.format(textPlan, fail.getOpenId()));
+            JdbcUtil.updateFailCodeById(fail.getId(), errorMsg.getErrcode());
+        }
 
         list.put("code", 0);
         list.put("info", "重发成功");
 
         return list;
+    }
+    /**
+    *@Description: 获取用户总数
+    */
+    @RequestMapping("/total")
+    public Integer getCustomer(){
+        return JdbcUtil.getCustomerCount();
+    }
+    /**
+    *@Description: 获取某条消息已经发送的个数
+    */
+    @RequestMapping("/sended")
+    public Integer getSendedCount(@RequestParam("message_id")Integer id){
+        return JdbcUtil.getSendedCount(id);
     }
 }

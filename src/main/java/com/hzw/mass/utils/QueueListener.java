@@ -51,14 +51,15 @@ class MyRunnable implements Runnable{
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body){
 
                     String json = new String(body);
+                    System.out.println(json);
                     HashMap map = new Gson().fromJson(json, HashMap.class);
                     String msgtype = (String) map.get("msgtype");
                     System.out.println(msgtype);
                     App.ACCESS_TOKEN = WxUtils.getAccessToken();
-                    //List<String> openIdList = WxUtils.getOpenIds(App.ACCESS_TOKEN).getData().getOpenid();
-                    List<String> openIdList = new ArrayList<>();
-                    openIdList.add("oRUz80_FTbCClMbeHJLD6oHUeAqE");
-                    openIdList.add("oRUz80_FTbCClMbeHJLD6oHUeAqE");
+                    List<String> openIdList = WxUtils.getOpenIds(App.ACCESS_TOKEN).getData().getOpenid();
+//                    List<String> openIdList = new ArrayList<>();
+//                    openIdList.add("oRUz80_FTbCClMbeHJLD6oHUeAqE");
+//                    openIdList.add("oRUz80_FTbCClMbeHJLD6oHUeAqE");
                     Integer messageId = JdbcUtil.getIdByMessage(json);
                     switch (msgtype){
                         case "text":
