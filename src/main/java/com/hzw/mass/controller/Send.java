@@ -312,8 +312,10 @@ public class Send {
         String contentType = file.getContentType();
         String fileName = file.getOriginalFilename();
         //String filePath ="F:\\Project\\mass\\src\\main\\webapp\\img\\";
-        String filePath = ClassUtils.getDefaultClassLoader().getResource("").getPath() + "static/img/";
-        String url = "img/" + fileName;
+//        String filePath = ClassUtils.getDefaultClassLoader().getResource("").getPath() + "static/img/";
+//        String url = "img/" + fileName;
+        String filePath = "/var/www/html/";
+        String url = "http://112.74.36.19:80/" + fileName;
         try{
             UploadUtil.uploadFile(file.getBytes(), filePath, fileName);
         }catch(Exception e){
