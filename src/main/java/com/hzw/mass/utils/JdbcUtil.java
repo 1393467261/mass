@@ -17,9 +17,6 @@ import java.util.List;
 public class JdbcUtil {
 
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
-    static final String DB_URL = "jdbc:mysql://112.74.36.19:3306/wx?useUnicode=true&characterEncoding=utf-8";
-    static final String USER = "admin";
-    static final String PASS = "admin";
 
     public static Connection getConnection() throws ClassNotFoundException, SQLException {
 
